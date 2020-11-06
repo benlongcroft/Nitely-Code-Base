@@ -50,7 +50,7 @@ class GetVenueVectors:
     def GetValidVenues(self):
         dbObj = sqlite3.connect('./ClubDataDB.db') #connect to database
         cursorObj = dbObj.cursor()
-        command = '''SELECT * FROM venues WHERE dress_rating = ?''' #generate base command
+        command = '''SELECT * FROM venues WHERE dress_rating <= ?''' #generate base command
         if self.TwentyOnePlus == True:
             command = command + ''' AND age_restriction = "over 21s"'''
         if self.paid == False:
@@ -65,12 +65,12 @@ class GetVenueVectors:
         for record in cursorObj.fetchall():
             record = list(record) #turn record from tuple to list
             address = record[-1]
-            distance = self.GetDistanceBetweenAddress(self.location, address)
+            distance = self.GetDistanceBetweenAddress(self.location, address) #get distance between address and venues
             record.append(distance)
             record = pd.DataFrame([record], columns = fields)
             ValidVenuesDF = ValidVenuesDF.append(record, ignore_index=True) #add series to pandas df
         pd.set_option('display.max_columns', None)
-        print(ValidVenuesDF)
+        print(len(ValidVenuesDF.axes[0]))
 
 
 
