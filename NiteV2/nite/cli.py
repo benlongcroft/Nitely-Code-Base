@@ -11,5 +11,5 @@ def cli():
     parser.add_argument("--location_distance", help="enter distance from location address in miles", type=int)
     args = parser.parse_args()
     '''Commandline arguments which can be called by script to execute nite session if message is received from front end management service'''
-    criteria = GetVenueVectors(**vars(args))
-    AllValidVenues = criteria.GetValidVenues()
+
+    return GetVenueVectors(**vars(args))

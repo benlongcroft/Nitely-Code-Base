@@ -11,6 +11,8 @@ class GetVenueVectors:
         self.location = {'lat':location.split(",")[0], 'lng':location.split(",")[1]}
         if location_distance > 50:
             print("Distance is too far to accurately represent club_data")
+        else:
+            self.total_distance_to_travel = location_distance
         try:
             self.LocationCoordinates = location.split(',')
         except Exception as e:
@@ -37,34 +39,36 @@ class GetVenueVectors:
 
 
 
-    def GetValidVenues(self):
-        db_obj = sqlite3.connect('./ClubDataDB.db') #connect to database
-        cursor_obj = db_obj.cursor()
-        command = '''SELECT * FROM venues WHERE dress_rating <= ?''' #generate base command
-
+    def GetValidVenues(self, start_location, db_obj, cursor_obj):
+        command = '''SELECT * FROM venues WHERE dress_rating <= ?''' # generate base command
+        if start_location != None:
+            location_coordinates = start_location
+        else:
+            location_coordinates = self.location
         if self.TwentyOnePlus == True:
             command = command + ''' AND age_restriction = "over 21s"'''
         if self.paid == False:
             command = command + ''' AND entry_price = no door charge'''
         print(command)
-        cursor_obj.execute(command, (self.smartness,)) #execute command
+        cursor_obj.execute(command, (self.smartness,)) # execute command
 
         fields = ["venue_id", "name", "description", "venue_type",
                 "age_restriction", "entry_price", "dress_code",
                 "dress_rating", "address", "distance"]
 
-        valid_venues_df = pd.DataFrame(columns=fields) #create pandas dataframe
+        valid_venues_df = pd.DataFrame(columns=fields) # create pandas dataframe
 
         for record in cursor_obj.fetchall():
-            record = list(record) #turn record from tuple to list
-            record_coordinates = {'lat':record[-1].split(",")[0], 'lng':record[-1].split(",")[1]} #get coordinates and split them into a dictionary
-            distance = self.GetDistanceBetweenAddress(self.location, record_coordinates) #get distance between address and venues
-            record.append(distance)
-            record = pd.DataFrame([record], columns = fields) #turn record into df so it can be appended
-            valid_venues_df = valid_venues_df.append(record, ignore_index=True) #add series to pandas df
-
+            record = list(record) # turn record from tuple to list
+            record_coordinates = {'lat':record[-1].split(",")[0], 'lng':record[-1].split(",")[1]} # get coordinates and split them into a dictionary
+            distance = self.GetDistanceBetweenAddress(location_coordinates, record_coordinates) # get distance between address and venues
+            if distance <= self.total_distance_to_travel:
+                record.append(distance)
+                record = pd.DataFrame([record], columns = fields) # turn record into df so it can be appended
+                valid_venues_df = valid_venues_df.append(record, ignore_index=True) # add series to pandas df
+            
         pd.set_option('display.max_columns', None)
-        valid_venues_df.sort_values(by=['distance'], inplace=True) #sort by distance from current location
+        valid_venues_df.sort_values(by=['distance'], inplace=True) # sort by distance from current location
         print(valid_venues_df)
 
 
