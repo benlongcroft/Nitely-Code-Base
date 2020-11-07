@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-from collections import namedtuple
 from geopy.distance import geodesic
 import pandas as pd
 
@@ -47,7 +46,7 @@ class GetVenueVectors:
             command = command + ''' AND age_restriction = "over 21s"'''
         if self.paid == False:
             command = command + ''' AND entry_price = no door charge'''
-
+        print(command)
         cursor_obj.execute(command, (self.smartness,)) #execute command
 
         fields = ["venue_id", "name", "description", "venue_type",
@@ -65,7 +64,8 @@ class GetVenueVectors:
             valid_venues_df = valid_venues_df.append(record, ignore_index=True) #add series to pandas df
 
         pd.set_option('display.max_columns', None)
-        print(len(valid_venues_df.axes[0]))
+        valid_venues_df.sort_values(by=['distance'], inplace=True) #sort by distance from current location
+        print(valid_venues_df)
 
 
 
