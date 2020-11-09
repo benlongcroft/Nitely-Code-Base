@@ -1,14 +1,24 @@
 import numpy as np
 from sklearn import preprocessing
-import spacy
+import en_core_web_md
+import sys
 
-nlp = spacy.load('en_core_web_md', disable=['parser'])
+nlp = en_core_web_md.load()
+
+if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+    nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+
+lexemes = []
+for orth in nlp.vocab.vectors:
+    if nlp.vocab[orth].prob >= -10:
+        lexemes.append(nlp.vocab[orth])
+# TODO: This needs to be worked on to improve efficiency. Maybe create a smaller dictionary of lexicons which contain
+#  only useful words
 
 def GetRelatedWords(word):
     word = nlp.vocab[word] #get nlp vocab object for word
     _queries=[]
-    for w in word.vocab.vectors:
-        _vocab_obj = nlp.vocab[w]
+    for _vocab_obj in lexemes:
         if _vocab_obj.is_lower == word.is_lower and _vocab_obj.prob >= -12:
             _queries.append(_vocab_obj)
     # TODO: Work out the ideal .prob value to use and streamline this function
@@ -30,7 +40,8 @@ def GetRelatedWords(word):
 #     else:
 #         return 'Error, profile has no values in it or no ability to create lemmas of words'
 
-'''The above function is not neccessary currently as all the descriptions are lemmatised in the db according to this function'''
+'''The above function is not neccessary currently as all the descriptions are lemmatised in the db according to this 
+function '''
 # TODO: do some more research on finding the most important words in a description
 
 # def GetKeywords(profile, TfidfScores):
@@ -48,7 +59,8 @@ def GetRelatedWords(word):
 #     for x in range(len(keywords)):
 #         keywords[x][1] = 1
 #     return keywords[:10]
-'''Also not neccessary currently and outdated as TFIDF is not the best method for analysing word importance just word frequency'''
+'''Also not neccessary currently and outdated as TFIDF is not the best method for analysing word importance just word 
+frequency '''
 
 def ConvertWordToVector(word):
         return preprocessing.normalize(nlp.vocab[word].vector.reshape(1, 300))  # normalise nlp word vector to shape 300
