@@ -1,25 +1,35 @@
 import numpy as np
 from sklearn import preprocessing
-import en_core_web_md
-import sys
+import spacy
+import pickle
+from time import perf_counter
 
-nlp = en_core_web_md.load()
-
-if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-    nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+t1_start = perf_counter()
+nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
 
 lexemes = []
-for orth in nlp.vocab.vectors:
-    if nlp.vocab[orth].prob >= -10:
-        lexemes.append(nlp.vocab[orth])
-# TODO: This needs to be worked on to improve efficiency. Maybe create a smaller dictionary of lexicons which contain
-#  only useful words
+pickle_off = open("lexemes.pkl", "rb")
+temp = pickle.load(pickle_off)
+for v in temp:
+    lexemes.append(nlp.vocab[v])
+
+# lexemes = []
+# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+# #
+# for orth in nlp.vocab.vectors:
+#     if nlp.vocab[orth].prob >= -12:
+#         lexemes.append(nlp.vocab[orth])
+
+t1_stop = perf_counter()
+print("Elapsed time:", t1_stop, t1_start)
+print("Action took in seconds:", t1_stop - t1_start)
 
 def GetRelatedWords(word):
     word = nlp.vocab[word] #get nlp vocab object for word
     _queries=[]
     for _vocab_obj in lexemes:
-        if _vocab_obj.is_lower == word.is_lower and _vocab_obj.prob >= -12:
+        if _vocab_obj.is_lower:
             _queries.append(_vocab_obj)
     # TODO: Work out the ideal .prob value to use and streamline this function
     by_similarity = [[x.text, x.similarity(word)] for x in _queries] # find similarity

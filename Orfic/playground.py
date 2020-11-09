@@ -42,3 +42,65 @@
 #
 # p.BoxPlot(d)
 # show(p)
+
+# import en_core_web_lg
+# import pickle
+# nlp = en_core_web_lg.load()
+#
+# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+#
+# lexemes = []
+# for orth in nlp.vocab.vectors:
+#     if nlp.vocab[orth].prob >= -10:
+#         lexemes.append(nlp.vocab[orth])
+#
+# with open('lexemes.pkl', 'wb') as f:
+#     pickle.dump(lexemes, f)
+#
+# import en_core_web_lg
+# from spacy.lang.en import English
+# import spacy.util
+#
+# nlp = en_core_web_lg.load()
+# print(len(nlp.vocab))
+# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+#
+# new_vocab = English.Defaults.create_vocab()
+# new_vocab.vectors = nlp.vocab.vectors
+# new_vocab.lookups = nlp.vocab.lookups
+#
+# x = 0
+# for lex in nlp.vocab:
+#     if lex.prob >= -15:
+#         new_vocab[lex.orth_] # this adds a lexeme
+#         new_vocab[lex.orth_].prob = lex.prob
+#         x=x+1
+#
+# nlp.vocab = new_vocab
+#
+#
+# print(len(nlp.vocab))
+# for name, pipe in nlp.pipeline:
+#     if hasattr(pipe, "cfg") and pipe.cfg.get("pretrained_vectors"):
+#         pipe.cfg["pretrained_vectors"] = nlp.vocab.vectors.name
+# nlp.to_disk("reduced_model")
+# nlp = spacy.load("reduced_model")
+import spacy
+import pickle
+
+nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
+
+lexemes = []
+if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+    nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+#
+for orth in nlp.vocab.vectors:
+    if nlp.vocab[orth].prob >= -12:
+        lexemes.append(nlp.vocab[orth])
+
+lexemes = [x.text for x in lexemes]
+with open('lexemes.pkl', 'wb') as f:
+    pickle.dump(lexemes, f)
+

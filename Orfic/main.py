@@ -4,6 +4,7 @@ from orfic.cli import cli
 from K2K.main import K2K
 import sqlite3
 import pandas as pd
+from time import perf_counter
 
 if __name__ == '__main__':
     UserObj = cli() # Get User object from cli() input
