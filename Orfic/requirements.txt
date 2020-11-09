@@ -9,4 +9,4 @@ datetime
 geopy
 requests
 pandas
-spacy
+spacy==2.2

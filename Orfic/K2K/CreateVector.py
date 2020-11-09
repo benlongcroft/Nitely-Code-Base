@@ -1,40 +1,57 @@
-from .main import nlp, ConvertWordToVector
 import numpy as np
+from sklearn import preprocessing
+import spacy
 
+nlp = spacy.load('en_core_web_md', disable=['parser'])
 
-def Sort2DList(BestMatchs):
-    return sorted(BestMatchs, key=lambda x: x[1])
+def GetRelatedWords(word):
+    word = nlp.vocab[word] #get nlp vocab object for word
+    _queries=[]
+    for w in word.vocab.vectors:
+        _vocab_obj = nlp.vocab[w]
+        if _vocab_obj.is_lower == word.is_lower and _vocab_obj.prob >= -12:
+            _queries.append(_vocab_obj)
+    # TODO: Work out the ideal .prob value to use and streamline this function
+    by_similarity = [[x.text, x.similarity(word)] for x in _queries] # find similarity
+    by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True) # sort similarity
+    if by_similarity[0][0] == word: # if first word in by_similarity is the origin word, delete it
+        del by_similarity[0]
+    return by_similarity[:3] # return three most similar words
 
+# def LemmatiseProfile(Profile):
+#     lemmatised_profile = nlp(Profile)
+#     profile_lemmas = []
+#     for word in lemmatised_profile:
+#         if not word.is_punct | word.is_stop:
+#             if word.pos_ == 'ADJ':
+#                 profile_lemmas.append(word.lemma_)
+#     if len(profile_lemmas) != 0:
+#         return profile_lemmas
+#     else:
+#         return 'Error, profile has no values in it or no ability to create lemmas of words'
 
-def LemmatiseProfile(Profile):
-    lemmatised_profile = nlp(Profile)
-    profile_lemmas = []
-    for word in lemmatised_profile:
-        if not word.is_punct | word.is_stop:
-            if word.pos_ == 'ADJ':
-                profile_lemmas.append(word.lemma_)
-    if len(profile_lemmas) != 0:
-        return profile_lemmas
-    else:
-        return 'Error, profile has no values in it or no ability to create lemmas of words'
+'''The above function is not neccessary currently as all the descriptions are lemmatised in the db according to this function'''
+# TODO: do some more research on finding the most important words in a description
 
+# def GetKeywords(profile, TfidfScores):
+#     keywords = []
+#     profile = profile.split(' ')
+#     for token in profile:
+#         try:
+#             if token == '\n' or token == '':
+#                 continue
+#             else:
+#                 keywords.append([token, TfidfScores[token]])
+#         except KeyError:
+#             print('Word not in Dictionary')
+#     keywords = sorted(keywords, key=lambda x: x[1])
+#     for x in range(len(keywords)):
+#         keywords[x][1] = 1
+#     return keywords[:10]
+'''Also not neccessary currently and outdated as TFIDF is not the best method for analysing word importance just word frequency'''
 
-def GetKeywords(profile, TfidfScores):
-    keywords = []
-    profile = profile.split(' ')
-    for token in profile:
-        try:
-            if token == '\n' or token == '':
-                continue
-            else:
-                keywords.append([token, TfidfScores[token]])
-        except KeyError:
-            print('Word not in Dictionary')
-    keywords = Sort2DList(keywords)
-    for x in range(len(keywords)):
-        keywords[x][1] = 1
-    return keywords[:10]
-
+def ConvertWordToVector(word):
+        return preprocessing.normalize(nlp.vocab[word].vector.reshape(1, 300))  # normalise nlp word vector to shape 300
 
 def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree):
     next_gen_words = []  # words to add at next generation
@@ -43,6 +60,7 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree)
     for x in range(len(WordsToAdd)):
         Tree[WordsToAdd[x]] = [ScoresToAdd[x]]  # add word and score
         related_words = GetRelatedWords(WordsToAdd[x])  # get related words
+        print(related_words)
         usable_words = []  # create list for those that are not duplicates
         for y in related_words:
             if not y[0] in AllWordsInTree:
@@ -67,7 +85,7 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree)
         return Tree  # finish
     else:
         Level = Level + 1  # increment middle layer counter
-        TreeCreation(Tree, next_gen_words, next_gen_scores, Level, LevelMax,AllWordsInTree)
+        TreeCreation(Tree, next_gen_words, next_gen_scores, Level, LevelMax, AllWordsInTree)
         # call routine again with new words
         return Tree  # for when complete
 

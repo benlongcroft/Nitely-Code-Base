@@ -1,5 +1,5 @@
 import argparse
-from .VenueVectors import GetVenueVectors
+from .UserPreferences import GetVenueVectors
 
 def cli():
     parser = argparse.ArgumentParser(prog="main")
@@ -9,6 +9,7 @@ def cli():
     parser.add_argument("--TwentyOnePlus", help="Check if user only wants 21+ clubs", action="store_true")
     parser.add_argument("--location", help='coordinates separated by a comma i.e lat,long', type=str)
     parser.add_argument("--location_distance", help="enter distance from location address in miles", type=int)
+    parser.add_argument("--keywords", help="All user keywords", nargs='+', type=str)
     args = parser.parse_args()
     '''Commandline arguments which can be called by script to execute nite session if message is received from front end management service'''
 

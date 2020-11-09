@@ -216,9 +216,10 @@ UserCursor = UserDB.cursor()
 ids = RefineData(NiteDB, NiteCursor)
 print(ids)
 ProfileVectors = LoadRelevantVectors(ids, NiteCursor, NiteDB)
-d = preprocessing.normalize(w2v.GetWordVector('live').reshape(1,300))
+# d = preprocessing.normalize(w2v.GetWordVector('live').reshape(1,300))
 # print('Profile vectors loaded') 
-# KeywordsToTry = ['lively', 'chic', 'electric', 'new', 'luxurious', 'expensive']
+KeywordsToTry = ['lively', 'chic', 'electric', 'new', 'luxurious', 'expensive']
+d = VectorisePreferences(KeywordsToTry)
 
 scores = GetClosestVector(ProfileVectors, d)
 

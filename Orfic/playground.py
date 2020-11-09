@@ -28,3 +28,17 @@
 #     venue_id = x+1
 #     cursor_obj.execute(command, (y[x], venue_id,))
 #     db_obj.commit()
+
+# from bokeh.plotting import figure, output_file, show
+# import spacy
+#
+# nlp = spacy.load('en_core_web_md', disable=['parser'])
+# word = nlp.vocab['lively']
+# d = []
+# for x in word.vocab:
+#     d.append(x.prob)
+# output_file("lines.html")
+# p = figure(title="Distribution of spaCy probs", x_axis_label='x', y_axis_label='y')
+#
+# p.BoxPlot(d)
+# show(p)
