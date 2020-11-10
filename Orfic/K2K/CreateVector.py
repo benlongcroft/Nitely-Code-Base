@@ -82,7 +82,6 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree)
     for x in range(len(WordsToAdd)):
         Tree[WordsToAdd[x]] = [ScoresToAdd[x]]  # add word and score
         related_words = GetRelatedWords(WordsToAdd[x])  # get related words
-        print(related_words)
         usable_words = []  # create list for those that are not duplicates
         for y in related_words:
             if not y[0] in AllWordsInTree:

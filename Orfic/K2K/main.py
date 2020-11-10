@@ -30,3 +30,7 @@ class K2K:
             _similarity.append(_cos)
         valid_venues_df['similarity'] = _similarity
         return valid_venues_df  # returns all vectors and their distances from the user_vector
+
+    def CompositeVector(self, x_vector, y_vector):
+        return (x_vector + y_vector)/2
+
