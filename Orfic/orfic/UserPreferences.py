@@ -3,6 +3,7 @@ from geopy.distance import geodesic
 import pandas as pd
 import numpy as np
 import sqlite3
+from . import intensity
 
 class GetVenueVectors:
     def __init__(self, smartness, paid, date, TwentyOnePlus, location, location_distance, keywords):
@@ -45,12 +46,14 @@ class GetVenueVectors:
         return geodesic((y_coordinates['lat'], y_coordinates['lng']),
                         (current_location['lat'], current_location['lng'])).miles
 
-    def FetchValidVenues(self, start_location):
+    def FetchValidVenues(self, start_location, radius):
         _command = '''SELECT * FROM venues WHERE dress_rating <= ?'''  # generate base command
         if start_location is not None:
             location_coordinates = start_location
         else:
             location_coordinates = self.__location
+        if radius == None:
+            radius = self.__total_distance_to_travel
         if self.__twenty_one_plus:
             _command = _command + ''' AND age_restriction = "over 21s"'''
         if not self.__paid:
@@ -69,12 +72,10 @@ class GetVenueVectors:
                                   'lng': record[-1].split(",")[1]}  # get coordinates and split them into a dictionary
             distance = self.__GetDistanceBetweenAddress(location_coordinates,
                                                       record_coordinates)  # get distance between address and venues
-            if distance <= self.__total_distance_to_travel:
+            if distance <= radius:
                 record.append(distance)
                 record = pd.DataFrame([record], columns=_fields)  # turn record into df so it can be appended
                 valid_venues_df = valid_venues_df.append(record, ignore_index=True)  # add series to pandas df
-        valid_venues_df.sort_values(by=['distance'], inplace=True,
-                                    ignore_index=True)  # sort by distance from current location
         return valid_venues_df
 
     def Get(self, valid_venues_df):
@@ -92,40 +93,51 @@ class GetVenueVectors:
         df = df.drop(index)  # remove locally from df so that we don't choose the same venue twice
         return df
 
+    def ReorderForIntensity(self, df, venue, position_in_night, total_venues):
+        og = venue
+        if position_in_night == 0:
+            if (intensity.check_venue_type(venue, self.cursor_obj, [2, 4, 5, 7, 9])) == False:
+                for index, row in df.iterrows():
+                    if (intensity.check_venue_type(row, self.cursor_obj, [2, 4, 5, 7, 9])):
+                        venue = row
+                        break
 
-    def GetNextVenue(self, K2KObj, venue_to_add, user_vector, v_df, package, num_venues, n): # add 1 to n
-        if n > num_venues-1:  # if number of venues is max
-            return package, v_df # return all values
+        elif position_in_night == total_venues-1:
+            if intensity.check_venue_type(venue, self.cursor_obj, [1, 6, 8, 11]) == False:
+                for index, row in df.iterrows():
+                    if (intensity.check_venue_type(row, self.cursor_obj, [1, 6, 8, 11])):
+                        venue = row
+                        break
+        return venue
+
+    def GetNextVenue(self, K2KObj, venue_to_add, user_vector, df, package, num_venues, n):
+        print(n)
+        if n == num_venues:
+            return package
         else:
-            if n == 1:
-                correct_venue = K2KObj.ReorderForIntensity(v_df, venue_to_add, n,
-                                                           num_venues, self.cursor_obj)
-                if correct_venue['venue_id'] != venue_to_add['venue_id']:
-                    venue_to_add = correct_venue
+            correct_venue = self.ReorderForIntensity(df, venue_to_add, n, num_venues)
+            if correct_venue['venue_id'] != venue_to_add['venue_id']:
+                print(venue_to_add['name'], '-->', correct_venue['name'])
+                venue_to_add = correct_venue
 
-                v_df = self.__RemoveVenue(v_df, venue_to_add['venue_id'])
-                package = package.append(venue_to_add, ignore_index=True)
+            package = package.append(venue_to_add, ignore_index=True)
 
-            n = n + 1
-            vector = np.array([float(x) for x in venue_to_add['vector'][0].split(' ')]).reshape(1,300)  # get venues vector
+            vector = np.array([float(x) for x in venue_to_add['vector'][0].split(' ')]).reshape(1, 300)
             composite_vector = K2KObj.CompositeVector(user_vector, vector)
-            # find midpoint between users vector and venues vector
-            v_df = K2KObj.GetClosestVectors(v_df, composite_vector)  # get vector closest to composite vector
-            v_df = v_df.rename_axis(None)
+            # create composite vector of user vector and venues vector
 
-            next_venue = v_df.iloc[0]  # get top value as v_df is sorted by similarit
-            correct_venue = K2KObj.ReorderForIntensity(v_df, next_venue, n,
-                                                       num_venues, self.cursor_obj)
+            location = {'lat': venue_to_add['address'].split(",")[0], 'lng': venue_to_add['address'].split(",")[1]}
+            # get the location of the club
 
-            # print(n+1, correct_venue['venue_id'], next_venue['venue_id'])
-            if next_venue['venue_id'] != correct_venue['venue_id']:
-                next_venue = correct_venue
-            v_df = self.__RemoveVenue(v_df, next_venue['venue_id'])  # remove the venue from the df to prevent it from
-            # occuring multiple times within each package just in different orders
-            package = package.append(next_venue, ignore_index=True)
-            return self.GetNextVenue(K2KObj, next_venue, user_vector, v_df, package, num_venues, n)
-            # recursively do again with next venue
+            df = self.FetchValidVenues(location, radius=1)
 
+            for venue_id in package['venue_id']:
+                df = self.__RemoveVenue(df, venue_id)
 
+            df = self.Get(df)
+            # find clubs within a mile of the starting club to begin search for the next club
+            df = K2KObj.GetClosestVectors(df, composite_vector)
 
+            next_venue = df.iloc[0]
 
+            return self.GetNextVenue(K2KObj, next_venue, user_vector, df, package, num_venues, n+1)

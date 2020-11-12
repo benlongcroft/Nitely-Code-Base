@@ -1,7 +1,7 @@
 from scipy.spatial import distance
-from .CreateVector import TreeCreation, TurnToVector, GetRelatedWords
+from .CreateVector import TreeCreation, TurnToVector
 import numpy as np
-from . import intensity
+
 
 # vectors should be pre-prepared. See NiteV1 for script to do so
 
@@ -38,30 +38,3 @@ class K2K:
                                     ignore_index=True)
         return valid_venues_df  # returns all vectors and their distances from the user_vector
 
-    def TestIntensity(self, values, expected):
-        one = False
-        for x in values:
-            if x[0] in expected:
-                    one = True
-                    break
-        return one
-
-    def ReorderForIntensity(self, df, venue, position_in_night, total_venues, cursor):
-        og = venue
-        if position_in_night == 1:
-            if (intensity.check_venue_type(venue, cursor, [2, 4, 5, 7, 9])) == False:
-                for index, row in df.iterrows():
-                    if (intensity.check_venue_type(row, cursor, [2, 4, 5, 7, 9])):
-                        venue = row
-                        break
-
-        elif position_in_night == total_venues:
-            if intensity.check_venue_type(venue, cursor, [1, 6, 8, 11]) == False:
-                for index, row in df.iterrows():
-                    if (intensity.check_venue_type(row, cursor, [1, 6, 8, 11])):
-                        venue = row
-                        break
-        if og['venue_id'] != venue['venue_id']:
-            print('Venue Changed!')
-            print(og['name'],'-->', venue['name'])
-        return venue
