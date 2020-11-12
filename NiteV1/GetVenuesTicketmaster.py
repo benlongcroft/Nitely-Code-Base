@@ -12,7 +12,7 @@ tm_client = ticketpy.ApiClient('LWq6J1B993ouxA9Aj0YXvsgP5U9eCHdV')
 #     for event in page:
 #         print(event)
 
-venues = tm_client.venues.find(country_code='GB', latlong='51.488710,-0.142030', radius=1, units='km', classification_name='bar').all()
+venues = tm_client.venues.find(country_code='GB', latlong='51.488710,-0.142030', radius=1, units='km', classification_name='nightclub').all()
 for v in venues:
     print('Name: ', v.name)
     print('Address: ', v.postal_code)

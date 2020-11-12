@@ -87,20 +87,61 @@
 #         pipe.cfg["pretrained_vectors"] = nlp.vocab.vectors.name
 # nlp.to_disk("reduced_model")
 # nlp = spacy.load("reduced_model")
-import spacy
-import pickle
-
-nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
-
-lexemes = []
-if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-    nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+# import spacy
+# import pickle
 #
-for orth in nlp.vocab.vectors:
-    if nlp.vocab[orth].prob >= -12:
-        lexemes.append(nlp.vocab[orth])
+# nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
+#
+# lexemes = []
+# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
+#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+# #
+# for orth in nlp.vocab.vectors:
+#     if nlp.vocab[orth].prob >= -12:
+#         lexemes.append(nlp.vocab[orth])
+#
+# lexemes = [x.text for x in lexemes]
+# with open('lexemes.pkl', 'wb') as f:
+#     pickle.dump(lexemes, f)
+#
+# import requests
+# import pandas as pd
+# command = 'https://www.skiddle.com/api/v1/events/search/'
+# Args = {'api_key':'6cb3113b3e7ba52fb4c981580f2b0b46', 'latitude':'51.488797',
+#         'longitude':'-0.141731', 'radius':'4',
+#         'eventcode':'CLUB', 'order':'distance',
+#         'ticketsavailable':'1'}
+# response = requests.get(command, params=Args)
+# c = response.json()['results']
+# pd.set_option('display.max_columns', None)
+# print(c)
+# results = pd.DataFrame(c)
+# print(results)
 
-lexemes = [x.text for x in lexemes]
-with open('lexemes.pkl', 'wb') as f:
-    pickle.dump(lexemes, f)
-
+# import sqlite3
+# db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
+# cursor_obj = db_obj.cursor() # instantiate a cursor for db
+#
+# venue_type = open('./ClubData/AllLondonClubsVenueType.txt')
+# d = {'nightclub':1, 'sports bar':2, 'dj bar':3, 'cocktail bar':4, 'bar':5,
+# 'bar & club':6, 'shisha bar':7, 'karaoke bar':8, 'restaurant':9, 'event space':10,
+# 'super club':11, 'other':12, 'venue':13}
+#
+# venues = []
+# for x in venue_type.readlines():
+#         x = x.lower()
+#         x = x.strip('\n')
+#         x = x.split(', ')
+#         x = [y.strip() for y in x]
+#         x = [d[y] for y in x]
+#         venues.append(x)
+#
+# command = '''INSERT INTO venue_to_type (venue_id, venue_type_id) VALUES (?, ?)'''
+# z = 0
+# for x in range(len(venues)):
+#         venue_id = x+1
+#         for y in venues[x]:
+#                 cursor_obj.execute(command, (venue_id, y,))
+#                 z=z+1
+#         db_obj.commit()
+# print(z)
