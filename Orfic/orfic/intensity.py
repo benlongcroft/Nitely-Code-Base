@@ -18,12 +18,11 @@ def check_venue_type(venue, cursor, venue_types):
     venue_id = venue['venue_id']
     # music_types = [1, 2, 3, 5, 6, 13, 15, 17, 18]
     # TODO: implement music_type command after
-    if (venue['entry_price'] == 'no door charge'):
-        command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type WHERE venue_id == ?'''
-        cursor.execute(command, (venue_id,))
-        result = cursor.fetchall()
-        for x in result:
-            if x[0] in venue_types:
-                correct_type = True
-                break
+    command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type WHERE venue_id == ?'''
+    cursor.execute(command, (venue_id,))
+    result = cursor.fetchall()
+    for x in result:
+        if x[0] in venue_types:
+            correct_type = True
+            break
     return correct_type

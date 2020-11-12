@@ -97,20 +97,19 @@ class GetVenueVectors:
         return df
 
     def ReorderForIntensity(self, df, venue, position_in_night, total_venues):
-        og = venue
         if position_in_night == 0:
             if (intensity.check_venue_type(venue, self.cursor_obj, [2, 4, 5, 7, 9])) == False:
                 for index, row in df.iterrows():
                     if (intensity.check_venue_type(row, self.cursor_obj, [2, 4, 5, 7, 9])):
                         venue = row
                         break
-
         elif position_in_night == total_venues-1:
             if intensity.check_venue_type(venue, self.cursor_obj, [1, 11]) == False:
                 for index, row in df.iterrows():
                     if (intensity.check_venue_type(row, self.cursor_obj, [1, 11])):
                         venue = row
                         break
+
         return venue
 
     def GetNextVenue(self, K2KObj, venue_to_add, user_vector, df, package, num_venues, n):
@@ -119,9 +118,9 @@ class GetVenueVectors:
         else:
             correct_venue = self.ReorderForIntensity(df, venue_to_add, n, num_venues)
             if correct_venue['venue_id'] != venue_to_add['venue_id']:
+                print('Changed to:', correct_venue['name'])
                 venue_to_add = correct_venue
             #check if venue is the correct level of intensity
-
             package = package.append(venue_to_add, ignore_index=True)
 
             vector = np.array([float(x) for x in venue_to_add['vector'][0].split(' ')]).reshape(1, 300)
