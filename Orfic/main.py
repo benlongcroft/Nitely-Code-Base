@@ -8,8 +8,6 @@ import pandas as pd
 if __name__ == '__main__':
     UserObj = cli() # Get User object from cli() input
 
-    # db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
-    # cursor_obj = db_obj.cursor() # instantiate a cursor for db
     keywords = UserObj.get_keywords # get keywords for K2K
 
     valid_venues_df = UserObj.FetchValidVenues(None, 4) # get all valid vectors with distances
@@ -22,7 +20,10 @@ if __name__ == '__main__':
     packages = []
 
     current_package = pd.DataFrame(columns = df.columns)
-    current_package = UserObj.GetNextVenue(K2KObj, df.iloc[0], user_vector, df, current_package, 3, 0)
+
+    starting_venue = df.iloc[0]
+
+    current_package = UserObj.GetNextVenue(K2KObj, starting_venue, user_vector, df, current_package, 3, 0)
     packages.append(current_package)
     print(packages)
 

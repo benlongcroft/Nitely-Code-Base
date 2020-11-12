@@ -89,8 +89,11 @@ class GetVenueVectors:
 
     @staticmethod
     def __RemoveVenue(df, venue_id):
-        index = df[df['venue_id'] == venue_id].index[0]  # get index of venue_to_add
-        df = df.drop(index)  # remove locally from df so that we don't choose the same venue twice
+        try:
+            index = df[df['venue_id'] == venue_id].index[0]  # get index of venue_to_add
+            df = df.drop(index)  # remove locally from df so that we don't choose the same venue twice
+        except IndexError as e:
+            print(venue_id, 'already removed from df')
         return df
 
     def ReorderForIntensity(self, df, venue, position_in_night, total_venues):
@@ -103,22 +106,21 @@ class GetVenueVectors:
                         break
 
         elif position_in_night == total_venues-1:
-            if intensity.check_venue_type(venue, self.cursor_obj, [1, 6, 8, 11]) == False:
+            if intensity.check_venue_type(venue, self.cursor_obj, [1, 11]) == False:
                 for index, row in df.iterrows():
-                    if (intensity.check_venue_type(row, self.cursor_obj, [1, 6, 8, 11])):
+                    if (intensity.check_venue_type(row, self.cursor_obj, [1, 11])):
                         venue = row
                         break
         return venue
 
     def GetNextVenue(self, K2KObj, venue_to_add, user_vector, df, package, num_venues, n):
-        print(n)
         if n == num_venues:
             return package
         else:
             correct_venue = self.ReorderForIntensity(df, venue_to_add, n, num_venues)
             if correct_venue['venue_id'] != venue_to_add['venue_id']:
-                print(venue_to_add['name'], '-->', correct_venue['name'])
                 venue_to_add = correct_venue
+            #check if venue is the correct level of intensity
 
             package = package.append(venue_to_add, ignore_index=True)
 
