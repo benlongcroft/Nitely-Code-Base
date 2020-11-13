@@ -12,6 +12,7 @@ pickle_off = open("lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
 for v in temp:
     lexemes.append(nlp.vocab[v])
+# TODO: Work out the ideal .prob value to use and streamline this function
 
 # lexemes = []
 # if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
@@ -25,18 +26,19 @@ t1_stop = perf_counter()
 print("Elapsed time:", t1_stop, t1_start)
 print("Action took in seconds:", t1_stop - t1_start)
 
+
 def GetRelatedWords(word):
-    word = nlp.vocab[word] #get nlp vocab object for word
-    _queries=[]
+    word = nlp.vocab[word]  # get nlp vocab object for word
+    _queries = []
     for _vocab_obj in lexemes:
         if _vocab_obj.is_lower:
             _queries.append(_vocab_obj)
-    # TODO: Work out the ideal .prob value to use and streamline this function
-    by_similarity = [[x.text, x.similarity(word)] for x in _queries] # find similarity
-    by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True) # sort similarity
-    if by_similarity[0][0] == word: # if first word in by_similarity is the origin word, delete it
+    by_similarity = [[x.text, x.similarity(word)] for x in _queries]  # find similarity
+    by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True)  # sort similarity
+    if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
         del by_similarity[0]
-    return by_similarity[:3] # return three most similar words
+    return by_similarity[:3]  # return three most similar words
+
 
 # def LemmatiseProfile(Profile):
 #     lemmatised_profile = nlp(Profile)
@@ -72,10 +74,12 @@ function '''
 '''Also not neccessary currently and outdated as TFIDF is not the best method for analysing word importance just word 
 frequency '''
 
-def ConvertWordToVector(word):
-        return preprocessing.normalize(nlp.vocab[word].vector.reshape(1, 300))  # normalise nlp word vector to shape 300
 
-def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree):
+def ConvertWordToVector(word):
+    return preprocessing.normalize(nlp.vocab[word].vector.reshape(1, 300))  # normalise nlp word vector to shape 300
+
+
+def TreeCreation(Tree, WordsToAdd, ScoresToAdd, level, LevelMax, AllWordsInTree):
     next_gen_words = []  # words to add at next generation
     next_gen_scores = []  # scores to add at next generation
     AllWordsInTree.extend(WordsToAdd)  # add inital words to AllWordsInTree so that we dont add duplicates
@@ -100,13 +104,13 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree)
         next_gen_words.extend([y[0] for y in usable_words])
         # add the new usable words to the words to add on the next generation
         next_gen_scores.extend([y[1] for y in usable_words])  # same as above but with scores
-    if Level == LevelMax:  # refers to number of middle layers, if a complete...
+    if level == LevelMax:  # refers to number of middle layers, if a complete...
         for y in next_gen_words:  # add the final words as final leaves
             Tree[y] = [next_gen_scores[next_gen_words.index(y)]]
         return Tree  # finish
     else:
-        Level = Level + 1  # increment middle layer counter
-        TreeCreation(Tree, next_gen_words, next_gen_scores, Level, LevelMax, AllWordsInTree)
+        level = level + 1  # increment middle layer counter
+        TreeCreation(Tree, next_gen_words, next_gen_scores, level, LevelMax, AllWordsInTree)
         # call routine again with new words
         return Tree  # for when complete
 

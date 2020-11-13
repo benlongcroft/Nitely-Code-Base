@@ -6,7 +6,7 @@ import numpy as np
 # vectors should be pre-prepared. See NiteV1 for script to do so
 
 class K2K:
-    def __init__(self, df, keywords, weightings):
+    def __init__(self, df, keywords, weightings, club_vectors):
         self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)
         self.__df = self.GetClosestVectors(df, self.__user_vector)
 
@@ -18,10 +18,15 @@ class K2K:
     def get_df(self):
         return self.__df
 
-    def CompositeVector(self, x_vector, y_vector):
-        return (x_vector + y_vector) / 2
+    @staticmethod
+    def CompositeVector(vectors):
+        composite_vector = np.empty((1,300))
+        for v in vectors:
+            composite_vector = v + composite_vector
+        return composite_vector/len(vectors)
 
-    def ConvertKeywordsToVectors(self, keywords, weightings):
+    @staticmethod
+    def ConvertKeywordsToVectors(keywords, weightings):
         return TurnToVector(TreeCreation({}, keywords, weightings, 0, 1, []))
 
     def GetClosestVectors(self, valid_venues_df, user_vector):
@@ -29,7 +34,8 @@ class K2K:
         _similarity = []
         for v in valid_venues_df['vector']:
             v = np.array([float(x) for x in v[0].split(' ')]).reshape(1,
-                                                                      300)  # split the string vector and convert to numpy array of floats
+                                                                      300)  # split the string vector and convert to
+            # numpy array of floats
             _cos = distance.euclidean(user_vector, v)
             # TODO: This gets the euclidian distance between two vectors, maybe consider other metrics?
             _similarity.append(_cos)
@@ -37,4 +43,3 @@ class K2K:
         valid_venues_df.sort_values(by=['similarity'], inplace=True,
                                     ignore_index=True)
         return valid_venues_df  # returns all vectors and their distances from the user_vector
-
