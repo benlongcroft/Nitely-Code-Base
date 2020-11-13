@@ -2,7 +2,7 @@ numpy~=1.19.4
 sklearn~=0.0
 scipy~=1.5.4
 pickle4
-bokeh~=2.2.3
+bokeh
 argparse~=1.4.0
 what3words
 datetime~=4.3

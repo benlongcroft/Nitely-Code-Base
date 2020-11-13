@@ -4,6 +4,7 @@ from orfic.cli import cli
 from K2K.main import K2K
 import pandas as pd
 import numpy as np
+
 if __name__ == '__main__':
     UserObj = cli()  # Get User object from cli() input
 
@@ -17,6 +18,8 @@ if __name__ == '__main__':
     for i in range(len(_vectors)):
         _vectors[i] = np.array([float(x) for x in _vectors[i][0].split(' ')]).reshape(1, 300)
 
+    control_vector = list(valid_venues_df['vector'])[0]
+    control_vector = np.array([float(x) for x in control_vector[0].split(' ')]).reshape(1, 300)
 
     K2KObj = K2K(valid_venues_df, keywords, [1 for x in range(len(keywords))], [])
     composite_vector = K2KObj.CompositeVector(_vectors)

@@ -8,6 +8,7 @@ import numpy as np
 class K2K:
     def __init__(self, df, keywords, weightings, club_vectors):
         self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)
+        self.__user_vector = self.__user_vector / np.linalg.norm(self.__user_vector)
         self.__df = self.GetClosestVectors(df, self.__user_vector)
 
     @property
