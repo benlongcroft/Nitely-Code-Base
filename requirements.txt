@@ -4,7 +4,6 @@ scipy~=1.5.4
 pickle4
 bokeh
 argparse~=1.4.0
-what3words
 datetime~=4.3
 geopy~=2.0.0
 requests

@@ -7,11 +7,14 @@ from . import intensity
 
 
 class GetVenueVectors:
-    def __init__(self, smartness, paid, date, eighteen, location, location_distance, keywords):
+    def __init__(self, smartness, paid, date,
+                 eighteen, location, location_distance,
+                 keywords, gay):
         self.__paid = paid
         self.__eighteen = eighteen
         self.__keywords = keywords
         self.__location = {'lat': location.split(",")[0], 'lng': location.split(",")[1]}
+        self.__gay = gay
         db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
         self.cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 
@@ -57,12 +60,16 @@ class GetVenueVectors:
             location_coordinates = start_location
         else:
             location_coordinates = self.__location
+
         if radius is None:
             radius = self.__total_distance_to_travel
+        if self.__gay:
+            _command = _command + ''' AND NOT gay = 1'''
         if self.__eighteen:
             _command = _command + ''' AND NOT age_restriction = "over 21s"'''
         if not self.__paid:
             _command = _command + ''' AND entry_price = no door charge'''
+
         self.cursor_obj.execute(_command, (self.__smartness,))  # execute command
 
         _fields = ["venue_id", "name", "description", "venue_type",
@@ -146,7 +153,7 @@ class GetVenueVectors:
 
             # find clubs within a mile of the starting club to begin search for the next club
             df = K2KObj.GetClosestVectors(df, composite_vector)
-
+            print(len(df))
             next_venue = df.iloc[0]
 
             return self.GetNextVenue(K2KObj, next_venue, user_vector, df, package, num_venues, n + 1)

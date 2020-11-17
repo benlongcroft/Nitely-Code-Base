@@ -13,13 +13,12 @@ if __name__ == '__main__':
     valid_venues_df = UserObj.FetchValidVenues(None, 4)  # get all valid vectors with distances
     valid_venues_df['vector'] = UserObj.GetVectors(list(valid_venues_df['venue_id']))  # added vectors to df
     # print(valid_venues_df)
+
     users_club_ids = [302, 108, 169, 185, 91]
+
     _vectors = UserObj.GetVectors(users_club_ids)
     for i in range(len(_vectors)):
         _vectors[i] = np.array([float(x) for x in _vectors[i][0].split(' ')]).reshape(1, 300)
-
-    control_vector = list(valid_venues_df['vector'])[0]
-    control_vector = np.array([float(x) for x in control_vector[0].split(' ')]).reshape(1, 300)
 
     K2KObj = K2K(valid_venues_df, keywords, [1 for x in range(len(keywords))], [])
     composite_vector = K2KObj.CompositeVector(_vectors)
