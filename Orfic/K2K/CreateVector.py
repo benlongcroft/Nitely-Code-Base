@@ -7,7 +7,7 @@ from time import perf_counter
 t1_start = perf_counter()
 nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
 
-lexemes = []
+lexemes = [] # get lexemes from pickled file and load into lexemes
 pickle_off = open("lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
 for v in temp:
@@ -22,7 +22,7 @@ for v in temp:
 #     if nlp.vocab[orth].prob >= -12:
 #         lexemes.append(nlp.vocab[orth])
 
-t1_stop = perf_counter()
+t1_stop = perf_counter() # time it
 print("Elapsed time:", t1_stop, t1_start)
 print("Action took in seconds:", t1_stop - t1_start)
 

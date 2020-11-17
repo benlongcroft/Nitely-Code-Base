@@ -20,7 +20,7 @@ if __name__ == '__main__':
     for i in range(len(_vectors)):
         _vectors[i] = np.array([float(x) for x in _vectors[i][0].split(' ')]).reshape(1, 300)
 
-    K2KObj = K2K(valid_venues_df, keywords, [1 for x in range(len(keywords))], [])
+    K2KObj = K2K(valid_venues_df, keywords, [1 for x in range(len(keywords))])
     composite_vector = K2KObj.CompositeVector(_vectors)
     df = K2KObj.get_df
     user_vector = K2KObj.get_user_vector

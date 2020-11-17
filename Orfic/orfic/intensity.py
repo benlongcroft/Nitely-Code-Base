@@ -9,6 +9,7 @@ def description_intensity(list_of_words):
     intensity = (intensity / len(list_of_words))
     return intensity
 
+#TODO: Also fix this piece of shit while you are at it
 def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_music_types):
     correct_music = False
     correct_venue = False

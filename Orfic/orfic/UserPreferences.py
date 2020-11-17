@@ -63,6 +63,8 @@ class GetVenueVectors:
 
         if radius is None:
             radius = self.__total_distance_to_travel
+
+        # sort out how far and where from where the user wants to travel
         if self.__gay:
             _command = _command + ''' AND NOT gay = 1'''
         if self.__eighteen:
@@ -70,7 +72,8 @@ class GetVenueVectors:
         if not self.__paid:
             _command = _command + ''' AND entry_price = no door charge'''
 
-        self.cursor_obj.execute(_command, (self.__smartness,))  # execute command
+        # add to base command based on user preferences
+        self.cursor_obj.execute(_command, (self.__smartness,))  # execute comand
 
         _fields = ["venue_id", "name", "description", "venue_type",
                    "age_restriction", "entry_price", "dress_code",
@@ -108,6 +111,7 @@ class GetVenueVectors:
             print(venue_id, 'already removed from df')
         return df
 
+    # TODO: Fix this utter piece of shit
     def AlterIntensity(self, df, venue, position_in_night, total_venues):
         if position_in_night == 0:
             if not (intensity.check_venue_music_type(venue, self.cursor_obj, [2, 4, 5, 7, 9], [1, 2, 3, 5, 6, 13, 15, 17, 18])):
@@ -138,6 +142,7 @@ class GetVenueVectors:
             package = package.append(venue_to_add, ignore_index=True)
 
             vector = np.array([float(x) for x in venue_to_add['vector'][0].split(' ')]).reshape(1, 300)
+            # Get vector from venue_to_add (comes in string format so takes a bit of rejigging)
             composite_vector = K2KObj.CompositeVector([user_vector, vector])
             # create composite vector of user vector and venues vector
 
@@ -146,9 +151,11 @@ class GetVenueVectors:
 
             df = self.FetchValidVenues(location, radius=1)
 
+            # remove venues already in our package. Don't wanna return to a venue
             for venue_id in package['venue_id']:
                 df = self.__RemoveVenue(df, venue_id)
 
+            # add vectors to df
             df['vector'] = self.GetVectors(list(df['venue_id']))
 
             # find clubs within a mile of the starting club to begin search for the next club
