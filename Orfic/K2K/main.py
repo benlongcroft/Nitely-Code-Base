@@ -1,14 +1,14 @@
 from scipy.spatial import distance
 from .CreateVector import TreeCreation, TurnToVector
 import numpy as np
-
+from sklearn import preprocessing
 
 # vectors should be pre-prepared. See NiteV1 for script to do so
 
 class K2K:
     def __init__(self, df, keywords, weightings, club_vectors):
         self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)
-        self.__user_vector = self.__user_vector / np.linalg.norm(self.__user_vector)
+        self.__user_vector = preprocessing.normalize(self.__user_vector)
         self.__df = self.GetClosestVectors(df, self.__user_vector)
 
     @property
