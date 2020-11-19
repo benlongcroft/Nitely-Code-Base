@@ -2,15 +2,17 @@ from scipy.spatial import distance
 from .CreateVector import TreeCreation, TurnToVector
 import numpy as np
 from sklearn import preprocessing
+import pickle
+
 
 # vectors should be pre-prepared. See NiteV1 for script to do so
 
 class K2K:
     def __init__(self, df, keywords, weightings):
-        self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings) # gets user vector. Can take a while
+        self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)  # gets user vector. Can take a while
         # depending on length of keywords list
-        self.__user_vector = preprocessing.normalize(self.__user_vector) # normalise vector
-        self.__df = self.GetClosestVectors(df, self.__user_vector) # add similarity column to df
+        self.__user_vector = preprocessing.normalize(self.__user_vector)  # normalise vector
+        self.__df = self.GetClosestVectors(df, self.__user_vector)  # add similarity column to df
 
     @property
     def get_user_vector(self):
@@ -21,15 +23,16 @@ class K2K:
         return self.__df
 
     @staticmethod
-    def CompositeVector(vectors): # finds midpoint of list of vectors
-        composite_vector = np.empty((1,300))
+    def CompositeVector(vectors):  # finds midpoint of list of vectors
+        composite_vector = np.empty((1, 300))
         for v in vectors:
             composite_vector = v + composite_vector
-        return preprocessing.normalize(composite_vector/len(vectors))
+        return preprocessing.normalize(composite_vector / len(vectors))
 
     @staticmethod
     def ConvertKeywordsToVectors(keywords, weightings):
-        return TurnToVector(TreeCreation({}, keywords, weightings, 0, 1, [])) # call Create Vector functions
+        return TurnToVector(TreeCreation({}, keywords, weightings, 0, 1, [], '/Users/benlongcroft/Documents/Orfic/Orfic/K2K/transpositiontbl.pkl'))
+        # call Create Vector functions
 
     def GetClosestVectors(self, valid_venues_df, user_vector):
         user_vector = user_vector.reshape(1, 300)
