@@ -17,8 +17,8 @@ def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_mus
         correct_venue = False
         venue_id = venue['venue_id']
 
-        venue_command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type WHERE venue_id == ?'''
-        music_command = '''SELECT venue_genres.genre_id FROM venue_genres WHERE venue_genres.venue_id = ?'''
+        venue_command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type, venues WHERE venue_to_type.venue_id == ?'''
+        music_command = '''SELECT venue_genres.genre_id FROM venue_genres, venues WHERE venue_genres.venue_id = ?'''
         if other_args != None:
             venue_command = venue_command + other_args
             music_command = music_command + other_args
@@ -44,4 +44,4 @@ def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_mus
                 venue = df.iloc[i]
                 i = i+1
             else:
-                return False
+                return None

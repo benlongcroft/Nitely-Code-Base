@@ -119,8 +119,8 @@ class GetVenueVectors:
 
     def DesperateSearch(self, venue_types, music_types, other_args):
         radius_increase = 0.5
-        venue_to_add = False
-        while not venue_to_add:
+        venue_to_add = None
+        while venue_to_add.all() == None:
             print('Entered into DESPERATE MODE!')
             # this only occurs if we cannot find a nightclub in the nearby area
             new_df = self.FetchValidVenues(self.__location, radius=radius_increase)
@@ -146,16 +146,16 @@ class GetVenueVectors:
         if venue_number == (num_venues - 1):  # if the venue is the last venue in the night
             venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj, last_venue_types,
                                                             last_venue_music, df, None)
-            if not venue_to_add:
+            if venue_to_add.all() == None:
                 venue_to_add = self.DesperateSearch(last_venue_types, last_venue_music, None)
             # this simply ensures the music type and venue type of the last venue in the package are nightclubs with
             # lively music
 
         elif venue_number == 0:  # if the venue is the first venue in the night
-            other_args = '''AND entry_price = "no door charge"'''
+            other_args = '''AND venues.entry_price = "no door charge"'''
             venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj, first_venue_types,
                                                             first_venue_music, df, other_args)
-            if not venue_to_add:
+            if venue_to_add.all() == None:
                 venue_to_add = self.DesperateSearch(first_venue_types, first_venue_music, other_args)
             # this simply ensures the music type and venue type of the last venue in the package are nightclubs with
             # lively music
@@ -184,6 +184,7 @@ class GetVenueVectors:
 
             increase_radius = 0.2
             while increase_radius <= 2:
+                print('Increased radius')
                 df = self.FetchValidVenues(location, radius=increase_radius)
                 if len(df) >= 10:
                     break

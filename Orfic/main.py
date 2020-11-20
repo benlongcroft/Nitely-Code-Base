@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     starting_venue = df.iloc[0]
 
-    current_package = UserObj.GetNextVenue(K2KObj, starting_venue, user_vector, df, current_package, 3, 0)
+    current_package = UserObj.GetNextVenue(K2KObj, starting_venue, user_vector, df, 3)
     packages.append(current_package)
     print(packages)
 
