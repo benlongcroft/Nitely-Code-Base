@@ -11,8 +11,8 @@ if __name__ == '__main__':
     keywords = UserObj.get_keywords  # get keywords for K2K
 
     valid_venues_df = UserObj.FetchValidVenues(None, 4)  # get all valid vectors with distances
+
     valid_venues_df['vector'] = UserObj.GetVectors(list(valid_venues_df['venue_id']))  # added vectors to df
-    # print(valid_venues_df)
 
     users_club_ids = [302, 108, 169, 185, 91]
 
@@ -35,3 +35,5 @@ if __name__ == '__main__':
     current_package = UserObj.GetNextVenue(K2KObj, starting_venue, user_vector, df, current_package, 3, 0)
     packages.append(current_package)
     print(packages)
+
+#TODO: 20/11/20 - Alter venue intensity. Restructure Get next venue so it is no longer recursive. Create intensity routine for each venue in package

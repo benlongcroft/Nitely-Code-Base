@@ -73,7 +73,7 @@ class GetVenueVectors:
             _command = _command + ''' AND entry_price = no door charge'''
 
         # add to base command based on user preferences
-        self.cursor_obj.execute(_command, (self.__smartness,))  # execute comand
+        self.cursor_obj.execute(_command, (self.__smartness,))  # execute command
 
         _fields = ["venue_id", "name", "description", "venue_type",
                    "age_restriction", "entry_price", "dress_code",
@@ -81,6 +81,7 @@ class GetVenueVectors:
 
         valid_venues_df = pd.DataFrame(columns=_fields)  # create pandas dataframe
 
+        i = 0
         for record in self.cursor_obj.fetchall():
             record = list(record)  # turn record from tuple to list
             record_coordinates = {'lat': record[-1].split(",")[0],
@@ -88,9 +89,11 @@ class GetVenueVectors:
             distance = self.__GetDistanceBetweenAddress(location_coordinates,
                                                         record_coordinates)  # get distance between address and venues
             if distance <= radius:
+                i += 1
                 record.append(distance)
                 record = pd.DataFrame([record], columns=_fields)  # turn record into df so it can be appended
                 valid_venues_df = valid_venues_df.append(record, ignore_index=True)  # add series to pandas df
+        print(i, 'records in db matching your search')
         return valid_venues_df
 
     def GetVectors(self, vector_ids):
@@ -101,7 +104,6 @@ class GetVenueVectors:
             _vectors.append(self.cursor_obj.fetchall()[0])  # add new column to valid venues to contain vectors
         return _vectors
 
-
     @staticmethod
     def __RemoveVenue(df, venue_id):
         try:
@@ -111,56 +113,94 @@ class GetVenueVectors:
             print(venue_id, 'already removed from df')
         return df
 
-    # TODO: Fix this utter piece of shit
-    def AlterIntensity(self, df, venue, position_in_night, total_venues):
-        if position_in_night == 0:
-            if not (intensity.check_venue_music_type(venue, self.cursor_obj, [2, 4, 5, 7, 9], [1, 2, 3, 5, 6, 13, 15, 17, 18])):
-                for index, row in df.iterrows():
-                    if intensity.check_venue_music_type(row, self.cursor_obj, [2, 4, 5, 7, 9], [1, 2, 3, 5, 6, 13, 15, 17, 18]):
-                        venue = row
-                        break
+    @staticmethod
+    def __StrToVector(vector_str):
+        return np.array([float(x) for x in vector_str.split(' ')]).reshape(1, 300)
 
-        elif position_in_night == total_venues - 1:
-            if not intensity.check_venue_music_type(venue, self.cursor_obj, [1, 11], [4, 7, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21]):
-                for index, row in df.iterrows():
-                    if intensity.check_venue_music_type(row, self.cursor_obj, [1, 11], [4, 7, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21]):
-                        venue = row
-                        break
+    def DesperateSearch(self, venue_types, music_types, other_args):
+        radius_increase = 0.5
+        venue_to_add = False
+        while not venue_to_add:
+            print('Entered into DESPERATE MODE!')
+            # this only occurs if we cannot find a nightclub in the nearby area
+            new_df = self.FetchValidVenues(self.__location, radius=radius_increase)
+            new_df['vector'] = self.GetVectors(list(new_df['venue_id']))
+            venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj, venue_types,
+                                                            music_types, new_df, other_args)
+            radius_increase = radius_increase + 0.5
+        return venue_to_add
+        # this simply checks to see if we can find any nightclubs near to the user's home location
+        # rather than their last venue if we cannot find any clubs near there.
+        # we continue doing this until eventually we find a club nearby (this method does not account for
+        # users preferences, it just goes into 'desperate mode' and looks for any club
 
-        return venue
+    def CheckIntensity(self, df, venue_to_add, venue_number, num_venues):
+        _supposed_intensity = venue_number + 1 / num_venues
+        last_venue_types = [1, 11]
+        last_venue_music = [4, 7, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21]
 
-    def GetNextVenue(self, K2KObj, venue_to_add, user_vector, df, package, num_venues, n):
-        if n == num_venues:
-            return package
+        first_venue_types = [2, 4, 5, 7, 9]
+        first_venue_music = [1, 2, 3, 5, 6, 13, 15, 17, 18]
+
+        # work out how intense the venue should be where 0 is the least intense and 1 is the most intense
+        if venue_number == (num_venues - 1):  # if the venue is the last venue in the night
+            venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj, last_venue_types,
+                                                            last_venue_music, df, None)
+            if not venue_to_add:
+                venue_to_add = self.DesperateSearch(last_venue_types, last_venue_music, None)
+            # this simply ensures the music type and venue type of the last venue in the package are nightclubs with
+            # lively music
+
+        elif venue_number == 0:  # if the venue is the first venue in the night
+            other_args = '''AND entry_price = "no door charge"'''
+            venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj, first_venue_types,
+                                                            first_venue_music, df, other_args)
+            if not venue_to_add:
+                venue_to_add = self.DesperateSearch(first_venue_types, first_venue_music, other_args)
+            # this simply ensures the music type and venue type of the last venue in the package are nightclubs with
+            # lively music
         else:
-            correct_venue = self.AlterIntensity(df, venue_to_add, n, num_venues)
-            if correct_venue['venue_id'] != venue_to_add['venue_id']:
-                print('Changed', venue_to_add['name'], 'to', correct_venue['name'])
-                venue_to_add = correct_venue
+            pass
+            #TODO: Need to put in some kind of intensity routine here
 
-            # check if venue is the correct level of intensity
+            # for all the middle venues
+        return venue_to_add
+
+    def GetNextVenue(self, K2KObj, start_venue, user_vector, df, num_venues):
+        venue_to_add = start_venue
+        package = pd.DataFrame(columns=df.columns)
+
+        for venue_number in range(num_venues):
+            correct_venue = self.CheckIntensity(df, venue_to_add, venue_number, num_venues)
+            venue_to_add = correct_venue  # if correct_venue and venue_to_add are the same this will do nothing
             package = package.append(venue_to_add, ignore_index=True)
 
-            vector = np.array([float(x) for x in venue_to_add['vector'][0].split(' ')]).reshape(1, 300)
-            # Get vector from venue_to_add (comes in string format so takes a bit of rejigging)
+            vector = self.__StrToVector(venue_to_add['vector'][0])
+            # get vector of venue_to_add
             composite_vector = K2KObj.CompositeVector([user_vector, vector])
-            # create composite vector of user vector and venues vector
-
+            # create composite vector of venue to add and user vector to establish what the next vector will be
             location = {'lat': venue_to_add['address'].split(",")[0], 'lng': venue_to_add['address'].split(",")[1]}
-            # get the location of the club
+            # gets location of venue_to_add
 
-            df = self.FetchValidVenues(location, radius=1)
+            increase_radius = 0.2
+            while increase_radius <= 2:
+                df = self.FetchValidVenues(location, radius=increase_radius)
+                if len(df) >= 10:
+                    break
+                increase_radius = increase_radius + 0.2
+            # uses location to search for nearby clubs. There must be more than 10 locations within 2 miles
+            # we look for clubs within half a mile and increase the step by 0.2 if we cannot find enough clubs.
 
-            # remove venues already in our package. Don't wanna return to a venue
             for venue_id in package['venue_id']:
                 df = self.__RemoveVenue(df, venue_id)
+            # removes venues already in the package from the database
 
-            # add vectors to df
             df['vector'] = self.GetVectors(list(df['venue_id']))
-
-            # find clubs within a mile of the starting club to begin search for the next club
+            # adds vectors to database
             df = K2KObj.GetClosestVectors(df, composite_vector)
-            print(len(df))
-            next_venue = df.iloc[0]
+            # sorts database by vectors closest to our composite vector
+            venue_to_add = df.iloc[0]
+            # defines the next venue as the one with the closest to K2K score (provisionally, we double check this at
+            # the start of every loop to ensure the venue has the correct intensity
 
-            return self.GetNextVenue(K2KObj, next_venue, user_vector, df, package, num_venues, n + 1)
+        return package

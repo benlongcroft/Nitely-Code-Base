@@ -145,3 +145,37 @@
 #                 z=z+1
 #         db_obj.commit()
 # print(z)
+
+from bokeh.plotting import figure, output_file, show
+import sqlite3
+import numpy as np
+from scipy.stats import pearsonr
+
+output_file("lines.html")
+
+db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
+cursor_obj = db_obj.cursor()  # instantiate a cursor for db
+
+allvectors = []
+for x in [1, 4]:
+    cursor_obj.execute('''SELECT venue_vectors.vector FROM venue_vectors, venue_to_type 
+                            WHERE venue_vectors.venue_id = venue_to_type.venue_id 
+                            AND venue_to_type.venue_type_id = ?''', (x,))
+    vectors = cursor_obj.fetchall()
+    for y in range(len(vectors)):
+        vectors[y] = np.array([float(z) for z in vectors[y][0].split(' ')]).reshape(300)
+    allvectors.append(vectors)
+
+p = figure(title="Vectors", x_axis_label='dim', y_axis_label='scale')
+
+allvectors[1] = allvectors[1][:109]
+
+# for x in allvectors[2]:
+#     p.line([f for f in range(300)], x, line_width = 1, color = "blue", legend_label = "Bar")
+# for x in allvectors[3]:
+#     p.line([f for f in range(300)], x, line_width = 1, color = "black", legend_label = "Karaoke Bar")
+# for x in allvectors[4]:
+#     p.line([f for f in range(300)], x, line_width = 1, color = "orange", legend_label = "Super Club")
+
+
+

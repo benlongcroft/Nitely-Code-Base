@@ -86,12 +86,14 @@ def CheckTranspositionTable(word, tbl):
         if word == list(dic.keys())[0]:
             return dic[word]
 
+
 def AddToTranspositionTable(object_to_add, FilePath, tbl):
-    # simpley writes the updated transposition table to the file
+    # simply writes the updated transposition table to the file
     tbl.extend(object_to_add)
-    Obj = open(FilePath, 'wb')
-    pickle.dump(tbl, Obj)
-    Obj.close()
+    obj = open(FilePath, 'wb')
+    pickle.dump(tbl, obj)
+    obj.close()
+
 
 def TreeCreation(Tree, WordsToAdd, ScoresToAdd, level, LevelMax, AllWordsInTree, TranspositionFilePath):
     next_gen_words = []  # words to add at next generation
@@ -104,12 +106,12 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, level, LevelMax, AllWordsInTree,
     words_for_transpos = []
     # opens transpos file and gets table, also define list to add new words too
     for x in range(len(WordsToAdd)):
-        trans_pos_result = CheckTranspositionTable(WordsToAdd[x], tbl) # get usable words from transpos table if exists
+        trans_pos_result = CheckTranspositionTable(WordsToAdd[x], tbl)  # get usable words from transpos table if exists
 
-        if trans_pos_result is not None: # if transpos result exists, define usable words as the result
+        if trans_pos_result is not None:  # if transpos result exists, define usable words as the result
             usable_words = trans_pos_result
 
-        else: # if not in transpos table, then do the old fashioned way ;]
+        else:  # if not in transpos table, then do the old fashioned way ;]
             related_words = GetRelatedWords(WordsToAdd[x])  # get related words
             usable_words = []  # create list for those that are not duplicates
             for y in related_words:
@@ -122,8 +124,7 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, level, LevelMax, AllWordsInTree,
                 usable_words[i][1] = usable_words[i][1] * word_parent_score
                 # reweighs according to the parents score so that the scores are holistic not just relevant to the node
                 # above
-            words_for_transpos.append({WordsToAdd[x]: usable_words}) # add to list of new words to add to transpos
-
+            words_for_transpos.append({WordsToAdd[x]: usable_words})  # add to list of new words to add to transpos
 
         AllWordsInTree.extend([y[0] for y in usable_words])  # add usable words to the list of all words in the tree
         if len(usable_words) != 0:  # if there are words in usable
@@ -137,11 +138,10 @@ def TreeCreation(Tree, WordsToAdd, ScoresToAdd, level, LevelMax, AllWordsInTree,
     if level == LevelMax:  # refers to number of middle layers, if a complete...
         for y in next_gen_words:  # add the final words as final leaves
             Tree[y] = [next_gen_scores[next_gen_words.index(y)]]
-        print(Tree)
         return Tree  # finish
 
     else:
-        AddToTranspositionTable(words_for_transpos, TranspositionFilePath, tbl) #add all new words to transpos file
+        AddToTranspositionTable(words_for_transpos, TranspositionFilePath, tbl)  # add all new words to transpos file
         level = level + 1  # increment middle layer counter
         TreeCreation(Tree, next_gen_words, next_gen_scores, level, LevelMax, AllWordsInTree, TranspositionFilePath)
         # call routine again with new words
