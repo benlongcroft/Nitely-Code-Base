@@ -161,7 +161,7 @@ class GetVenueVectors:
             # lively music
         else:
             pass
-            #TODO: Need to put in some kind of intensity routine here
+            #TODO: Need to put in some kind of intensity routine here. Currently not worrying about it. Moving on...
 
             # for all the middle venues
         return venue_to_add
@@ -189,6 +189,7 @@ class GetVenueVectors:
                 if len(df) >= 10:
                     break
                 increase_radius = increase_radius + 0.2
+
             # uses location to search for nearby clubs. There must be more than 10 locations within 2 miles
             # we look for clubs within half a mile and increase the step by 0.2 if we cannot find enough clubs.
 

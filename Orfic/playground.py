@@ -1,181 +1,95 @@
-# import requests
 # import sqlite3
+# from keras.models import Sequential, save_model, load_model
+# from keras.layers import Dense
+# from keras.models import model_from_json
+# import numpy as np
+# import random
 #
-# geo_url = 'https://maps.googleapis.com/maps/api/geocode/json'
-# api_key = "AIzaSyAAQ2bYW5ZsFg3VUoms-BxkeO5NCafGu5o"
-# #use google maps API
-# db_obj = sqlite3.connect('./ClubDataDB.db') #connect to database
-# cursor_obj = db_obj.cursor()
+# def make_pretty(db_output):
+#     newlist = []
+#     for vector in db_output:
+#         vector_str = vector[0]
+#         vector = np.array([float(x) for x in vector_str.split(' ')]).reshape(1, 300)
+#         newlist.append(vector)
+#     return np.array(newlist)
 #
-# command = '''SELECT address FROM venues WHERE venue_id=?''' #generate base command
-# y=[]
-# for x in range(1, 311):
-#     cursor_obj.execute(command, (x,))
-#     y_address = cursor_obj.fetchall()
-#     y_address = y_address[0][0]
-#     print(y_address)
-#     response = requests.get(geo_url, params={'address':y_address, 'key':api_key})
-#     #insert address into requests module
-#     results = response.json()['results'][0]
-#     y_coordinates = results['geometry']['location']
-#     y_coordinates = str(y_coordinates['lat'])+','+str(y_coordinates['lng'])
-#     print(y_coordinates)
-#     y.append(y_coordinates)
-#     print('\n')
+# def get_data():
+#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/Orfic/ClubDataDB.db')  # connect to database
+#     cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 #
-# command = "UPDATE venues SET address=? WHERE venue_id=?"
-# for x in range(len(y)):
-#     venue_id = x+1
-#     cursor_obj.execute(command, (y[x], venue_id,))
-#     db_obj.commit()
-
-# from bokeh.plotting import figure, output_file, show
-# import spacy
+#     _command = '''SELECT venue_vectors.vector FROM venue_vectors, venue_to_type
+#     WHERE venue_vectors.venue_id = venue_to_type.venue_id AND venue_to_type.venue_type_id = 1 OR venue_to_type.venue_type_id = 11'''
+#     cursor_obj.execute(_command)
+#     AllIntenseVenuesX = cursor_obj.fetchall()
 #
-# nlp = spacy.load('en_core_web_md', disable=['parser'])
-# word = nlp.vocab['lively']
-# d = []
-# for x in word.vocab:
-#     d.append(x.prob)
-# output_file("lines.html")
-# p = figure(title="Distribution of spaCy probs", x_axis_label='x', y_axis_label='y')
+#     _command = '''SELECT venue_vectors.vector FROM venue_vectors, venue_to_type
+#     WHERE venue_vectors.venue_id = venue_to_type.venue_id AND venue_to_type.venue_type_id = 4
+#     OR venue_to_type.venue_type_id = 5 OR venue_to_type.venue_type_id = 2'''
+#     cursor_obj.execute(_command)
+#     AllMildVenuesX = cursor_obj.fetchall()
 #
-# p.BoxPlot(d)
-# show(p)
-
-# import en_core_web_lg
-# import pickle
-# nlp = en_core_web_lg.load()
+#     AllData = AllIntenseVenuesX + AllMildVenuesX
+#     AllScores = [1 for x in range(len(AllIntenseVenuesX))] + [0 for y in range(len(AllMildVenuesX))]
 #
-# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+#     AllData = make_pretty(AllData)
 #
-# lexemes = []
-# for orth in nlp.vocab.vectors:
-#     if nlp.vocab[orth].prob >= -10:
-#         lexemes.append(nlp.vocab[orth])
+#     LengthOfAllData = len(AllData)
+#     TrainLength = int(round(0.8 * LengthOfAllData))
 #
-# with open('lexemes.pkl', 'wb') as f:
-#     pickle.dump(lexemes, f)
+#     TrainX = np.array(AllData[:TrainLength]).reshape(TrainLength, 300)
+#     print(TrainX.shape)
+#     TrainY = np.array(AllScores[:TrainLength]).reshape(TrainLength, 1)
+#     print(TrainY.shape)
+#     TestX = np.array(AllData[TrainLength:]).reshape(LengthOfAllData-TrainLength, 300)
+#     print(TestX.shape)
+#     TestY = np.array(AllScores[TrainLength:]).reshape(LengthOfAllData-TrainLength, 1)
+#     print(TestY.shape)
 #
-# import en_core_web_lg
-# from spacy.lang.en import English
-# import spacy.util
+#     return TrainX, TrainY, TestX, TestY
 #
-# nlp = en_core_web_lg.load()
-# print(len(nlp.vocab))
-# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+# def save_keras_model(model):#save model to json file
+#     model_json = model.to_json() #abracadabra
+#     with open("intensity_weights.json", "w") as json_file: #open json file
+#         json_file.write(model_json) #write our jsoned model
+#     # serialize weights to HDF5
+#     model.save_weights("intensity_weights.h5") #save the weights in a HDF5 format
+#     print("Saved model to disk in current directory") #print output message
 #
-# new_vocab = English.Defaults.create_vocab()
-# new_vocab.vectors = nlp.vocab.vectors
-# new_vocab.lookups = nlp.vocab.lookups
-#
-# x = 0
-# for lex in nlp.vocab:
-#     if lex.prob >= -15:
-#         new_vocab[lex.orth_] # this adds a lexeme
-#         new_vocab[lex.orth_].prob = lex.prob
-#         x=x+1
-#
-# nlp.vocab = new_vocab
-#
-#
-# print(len(nlp.vocab))
-# for name, pipe in nlp.pipeline:
-#     if hasattr(pipe, "cfg") and pipe.cfg.get("pretrained_vectors"):
-#         pipe.cfg["pretrained_vectors"] = nlp.vocab.vectors.name
-# nlp.to_disk("reduced_model")
-# nlp = spacy.load("reduced_model")
-# import spacy
-# import pickle
-#
-# nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
-#
-# lexemes = []
-# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
+# def open_saved_model(path_to_file, path_to_weights):
+#     json_file = open(path_to_file, 'r') #open file in read only format
+#     loaded_model_json = json_file.read() #read the model
+#     json_file.close() #close the file
+#     loaded_model = model_from_json(loaded_model_json) #change from json file to model
+#     # load weights into new model
+#     loaded_model.load_weights(path_to_weights) #open loaded weights
+#     print("Loaded model from disk")
+#     return loaded_model
 # #
-# for orth in nlp.vocab.vectors:
-#     if nlp.vocab[orth].prob >= -12:
-#         lexemes.append(nlp.vocab[orth])
+# # TrainX, TrainY, TestX, TestY = get_data()
+# # print(len(TrainX), len(TrainY))
+# # print(len(TestX), len(TestY))
+# #
+# # model = Sequential()
+# # model.add(Dense(200, input_dim=300, activation='relu'))
+# # model.add(Dense(250, activation='relu'))
+# # model.add(Dense(50, activation='relu'))
+# # model.add(Dense(1, activation='sigmoid'))
+# #
+# # model.compile(loss='mse', optimizer='adagrad', metrics=['accuracy'])
+# # history = model.fit(TrainX, TrainY, epochs=150, batch_size=10, shuffle=True)
+# # scores = model.evaluate(TestX, TestY)
+# # print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+# # save_model(model, './saved_model')
 #
-# lexemes = [x.text for x in lexemes]
-# with open('lexemes.pkl', 'wb') as f:
-#     pickle.dump(lexemes, f)
+# def Testing(venue_id, model):
+#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/Orfic/ClubDataDB.db')  # connect to database
+#     cursor_obj = db_obj.cursor()  # instantiate a cursor for db
+#     _command = '''SELECT venue_vectors.vector FROM venue_vectors WHERE venue_id = ?'''
+#     cursor_obj.execute(_command, (venue_id, ))
+#     params = cursor_obj.fetchall()
+#     params = params[0][0]
+#     vector = np.array([float(x) for x in params.split(' ')]).reshape(1, 300)
+#     print(model.predict(vector))
 #
-# import requests
-# import pandas as pd
-# command = 'https://www.skiddle.com/api/v1/events/search/'
-# Args = {'api_key':'6cb3113b3e7ba52fb4c981580f2b0b46', 'latitude':'51.488797',
-#         'longitude':'-0.141731', 'radius':'4',
-#         'eventcode':'CLUB', 'order':'distance',
-#         'ticketsavailable':'1'}
-# response = requests.get(command, params=Args)
-# c = response.json()['results']
-# pd.set_option('display.max_columns', None)
-# print(c)
-# results = pd.DataFrame(c)
-# print(results)
-
-# import sqlite3
-# db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
-# cursor_obj = db_obj.cursor() # instantiate a cursor for db
-#
-# venue_type = open('./ClubData/AllLondonClubsVenueType.txt')
-# d = {'nightclub':1, 'sports bar':2, 'dj bar':3, 'cocktail bar':4, 'bar':5,
-# 'bar & club':6, 'shisha bar':7, 'karaoke bar':8, 'restaurant':9, 'event space':10,
-# 'super club':11, 'other':12, 'venue':13}
-#
-# venues = []
-# for x in venue_type.readlines():
-#         x = x.lower()
-#         x = x.strip('\n')
-#         x = x.split(', ')
-#         x = [y.strip() for y in x]
-#         x = [d[y] for y in x]
-#         venues.append(x)
-#
-# command = '''INSERT INTO venue_to_type (venue_id, venue_type_id) VALUES (?, ?)'''
-# z = 0
-# for x in range(len(venues)):
-#         venue_id = x+1
-#         for y in venues[x]:
-#                 cursor_obj.execute(command, (venue_id, y,))
-#                 z=z+1
-#         db_obj.commit()
-# print(z)
-
-from bokeh.plotting import figure, output_file, show
-import sqlite3
-import numpy as np
-from scipy.stats import pearsonr
-
-output_file("lines.html")
-
-db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
-cursor_obj = db_obj.cursor()  # instantiate a cursor for db
-
-allvectors = []
-for x in [1, 4]:
-    cursor_obj.execute('''SELECT venue_vectors.vector FROM venue_vectors, venue_to_type 
-                            WHERE venue_vectors.venue_id = venue_to_type.venue_id 
-                            AND venue_to_type.venue_type_id = ?''', (x,))
-    vectors = cursor_obj.fetchall()
-    for y in range(len(vectors)):
-        vectors[y] = np.array([float(z) for z in vectors[y][0].split(' ')]).reshape(300)
-    allvectors.append(vectors)
-
-p = figure(title="Vectors", x_axis_label='dim', y_axis_label='scale')
-
-allvectors[1] = allvectors[1][:109]
-
-# for x in allvectors[2]:
-#     p.line([f for f in range(300)], x, line_width = 1, color = "blue", legend_label = "Bar")
-# for x in allvectors[3]:
-#     p.line([f for f in range(300)], x, line_width = 1, color = "black", legend_label = "Karaoke Bar")
-# for x in allvectors[4]:
-#     p.line([f for f in range(300)], x, line_width = 1, color = "orange", legend_label = "Super Club")
-
-
-
+# model = load_model('./saved_model')
+# Testing(2, model)

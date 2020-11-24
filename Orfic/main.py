@@ -35,5 +35,3 @@ if __name__ == '__main__':
     current_package = UserObj.GetNextVenue(K2KObj, starting_venue, user_vector, df, 3)
     packages.append(current_package)
     print(packages)
-
-#TODO: 20/11/20 - Alter venue intensity. Restructure Get next venue so it is no longer recursive. Create intensity routine for each venue in package
