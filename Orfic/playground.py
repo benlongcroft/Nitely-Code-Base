@@ -93,3 +93,96 @@
 #
 # model = load_model('./saved_model')
 # Testing(2, model)
+# import requests
+# import pandas as pd
+
+# def CheckWordCount(input_list):
+#     return len(input_list.split(' '))
+# link = "https://www.skiddle.com/api/v1/venues/?&type=n" \
+#        "&api_key=6cb3113b3e7ba52fb4c981580f2b0b46" \
+#        "&latitude=51.4978793&longitude=-0.0039635&radius=10" \
+#        "&limit=100&description=1"
+# r = requests.get(link)
+# r = r.json()
+# df = pd.DataFrame(r['results'])
+# pd.set_option('display.max_columns', None)
+# print(df)
+# # ids = list(df['id'])
+# # descriptions = list(df['description'])
+# #
+# # for x in range(len(descriptions)):
+
+import requests
+from bs4 import BeautifulSoup
+import re
+import urllib.parse
+from urllib.parse import urlparse
+import sqlite3
+from random import shuffle
+import time
+
+def googleSearch(query):
+    g_clean = [ ]
+    # url = 'https://www.google.com/search?client=ubuntu&channel=fs&q={}&ie=utf-8&oe=utf-8'.format(query)
+    url = 'https://www.google.com/search?channel=fs&q={}&ie=utf-8&oe=utf-8'.format(query)
+    try:
+        html = requests.get(url)
+        print(html)
+        if html.status_code==200:
+            soup = BeautifulSoup(html.text, 'lxml')
+            a = soup.find_all('a')
+            for i in a:
+                k = i.get('href')
+                try:
+                    m = re.search("(?P<url>https?://[^\s]+)", k)
+                    n = m.group(0)
+                    rul = n.split('&')[0]
+                    domain = urlparse(rul)
+                    if(re.search('google.com', domain.netloc)):
+                        continue
+                    else:
+                        g_clean.append(rul)
+                except:
+                    continue
+    except Exception as ex:
+        print(ex)
+    finally:
+        return g_clean
+
+def CheckLink(url, name, town):
+    base = "https://www.designmynight.com/"
+    if base in url:
+        if '/'+name+'/' in url and '/'+town+'/':
+            return url
+
+db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/skiddle/venues_skiddle.db')
+cursor_obj = db_obj.cursor()
+
+cursor_obj.execute('SELECT name, town FROM venues')
+venues = cursor_obj.fetchall()
+shuffle(venues)
+for v in venues:
+    time.sleep(1)
+    searchterm = (v[0]+' '+v[1]+' '+'designmynight.com')
+    print(searchterm)
+    links = googleSearch(searchterm)
+    print(links)
+    for l in links:
+        u = CheckLink(l, v[0], v[1])
+        print(u)
+        html = requests.get(u)
+        if html.status_code == 200:
+            soup = BeautifulSoup(html.text, 'lxml')
+            try:
+                l = soup.find("section", class_="row line-height-2x")
+                description = l.text
+                print(description)
+            except:
+                print(u)
+                print('Cant find description')
+#
+# html = requests.get(url)
+# if html.status_code == 200:
+#     soup = BeautifulSoup(html.text, 'lxml')
+#     l = soup.find("section", class_="row line-height-2x")
+#     print(l.text)

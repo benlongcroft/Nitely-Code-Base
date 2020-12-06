@@ -12,3 +12,6 @@ spacy-lookups-data
 scikit-learn~=0.23.2
 keras
 tensorflow
+urllib3
+lxml
+html5lib

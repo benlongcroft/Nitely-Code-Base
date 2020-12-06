@@ -12,7 +12,6 @@ class K2K:
         self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)  # gets user vector. Can take a while
         # depending on length of keywords list
         self.__user_vector = preprocessing.normalize(self.__user_vector)  # normalise vector
-        self.__df = self.GetClosestVectors(df, self.__user_vector)  # add similarity column to df
 
     @property
     def get_user_vector(self):

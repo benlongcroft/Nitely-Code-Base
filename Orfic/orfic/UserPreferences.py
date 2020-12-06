@@ -93,7 +93,6 @@ class GetVenueVectors:
                 record.append(distance)
                 record = pd.DataFrame([record], columns=_fields)  # turn record into df so it can be appended
                 valid_venues_df = valid_venues_df.append(record, ignore_index=True)  # add series to pandas df
-        print(i, 'records in db matching your search')
         return valid_venues_df
 
     def GetVectors(self, vector_ids):
@@ -184,7 +183,6 @@ class GetVenueVectors:
 
             increase_radius = 0.2
             while increase_radius <= 2:
-                print('Increased radius')
                 df = self.FetchValidVenues(location, radius=increase_radius)
                 if len(df) >= 10:
                     break
