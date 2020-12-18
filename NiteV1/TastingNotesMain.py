@@ -17,12 +17,12 @@ def GetVector(doc, TfidfScores, SentimentScores):
     for x in temp:
         words.append(x[0])
         scores.append(x[1])
-    z = TC.TurnToVector(TC.RecursiveTreeCreation({}, words, scores, 0, 1, []))
+    z = TC.turn_to_vector(TC.RecursiveTreeCreation({}, words, scores, 0, 1, []))
     return z
 
 def VectorisePreferences(keywords):
     scores = [1 for x in range(len(keywords))]
-    return TC.TurnToVector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
+    return TC.turn_to_vector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
 
 def GetVectors(data, splitpoint = None):
     if splitpoint != None:
@@ -98,7 +98,7 @@ print('TFIDF scores logged')
 
 print('Calculating vectors')
 
-# ProfileVectors = GetVectors(data, None)
+# ProfileVectors = get_vectors(data, None)
 data, ProfileVectors = OpenSavedVectors("PickledVectors.vec")
 print('Profile vectors created')
 print('Saving vectors to pickle file')

@@ -6,14 +6,8 @@ modules and other general information useful for any further development on this
 codebase. 
 ___
 ###Typing and Naming Customs
-All modules and functions should be typed with no underscores. The start of a new word should 
-be denoted by the capitalisation of the next word.
-
-_i.e_
-
-    def NewFunction(param, param2):
-        pass
-_is correct_
+All modules and functions should follow snake_case naming customs inline with 
+PEP008 python style guides
 
 All variable names within the scope of a function that are local should be lowercase
 and spaces between words should be denoted via a `_` 
@@ -87,6 +81,11 @@ size increases and the relations increase in complexity.
 
 `geopy` - Used to calculate physical distance between coordinates of venues
 
+###Output
+___
+Currently, the output of the program is to output 3 different packages containing the number of venues 
+the user wants to visit. This comes in the format of of 3 pandas dataframes. This can then be formatted 
+and processed.
 
 ###Other Files
 ___

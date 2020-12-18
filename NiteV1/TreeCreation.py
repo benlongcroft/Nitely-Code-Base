@@ -38,10 +38,10 @@ def GetKeywords(profile, TfidfScores, SentimentScores):
 def RecursiveTreeCreation(Tree, WordsToAdd, ScoresToAdd, Level, LevelMax, AllWordsInTree):
     NextGenWords = [] #words to add at next generation
     NextGenScores = [] # scores to add at next generation
-    AllWordsInTree.extend(WordsToAdd) #add inital words to AllWordsInTree so that we dont add duplicates
+    AllWordsInTree.extend(WordsToAdd) #add inital words to all_words_in_tree so that we dont add duplicates
     for x in range(len(WordsToAdd)):
         Tree[WordsToAdd[x]] = [ScoresToAdd[x]] #add word and score
-        RelatedWords = w2v.GetRelatedWords(WordsToAdd[x]) #get related words
+        RelatedWords = w2v.get_related_words(WordsToAdd[x]) #get related words
         Usable = [] #create list for those that are not duplicates
         for y in RelatedWords:
             if not y[0] in AllWordsInTree:

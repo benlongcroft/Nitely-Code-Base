@@ -22,12 +22,12 @@ def GetVector(doc, TfidfScores, SentimentScores): #enter doc as string
     for x in temp:
         words.append(x[0])
         scores.append(x[1])
-    z = TC.TurnToVector(TC.RecursiveTreeCreation({}, words, scores, 0, 1, []))
+    z = TC.turn_to_vector(TC.RecursiveTreeCreation({}, words, scores, 0, 1, []))
     return z
 
 def VectorisePreferences(keywords):
     scores = [1 for x in range(len(keywords))]
-    return TC.TurnToVector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
+    return TC.turn_to_vector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
 
 def GetVectors(data, splitpoint, TfidfScores, SentimentScores):
     if splitpoint != None:

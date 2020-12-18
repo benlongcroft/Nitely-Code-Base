@@ -4,7 +4,7 @@
 # 	model = Word2Vec(Data, size = 400, window = 4, min_count=1, workers=6, sg=1)
 # 	return model
 
-# def GetRelatedWords(ActualWord, model):
+# def get_related_words(ActualWord, model):
 # 	return model.wv.most_similar(positive=ActualWord)[:3]
 
 # def GetWordVector(word, model):

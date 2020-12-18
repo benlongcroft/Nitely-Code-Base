@@ -23,7 +23,7 @@ def LoadRelevantVectors(ids, cursor, db):
 
 def VectorisePreferences(keywords):
     scores = [1 for x in range(len(keywords))]
-    return TC.TurnToVector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
+    return TC.turn_to_vector(TC.RecursiveTreeCreation({}, keywords, scores, 0, 1, []))
 
 def GetClosestVector(ProfileVectors, vector):
     E = vector.reshape(1,300)

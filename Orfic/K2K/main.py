@@ -1,47 +1,77 @@
+"""
+Creates K2K class and calls essential functions to act on vectors to establish similarity
+vectors should be pre-prepared. See NiteV1 for script to do so
+
+"""
 from scipy.spatial import distance
-from .CreateVector import TreeCreation, TurnToVector
 import numpy as np
 from sklearn import preprocessing
-import pickle
+from .create_vector import tree_creation, turn_to_vector
 
-
-# vectors should be pre-prepared. See NiteV1 for script to do so
 
 class K2K:
-    def __init__(self, df, keywords, weightings):
-        self.__user_vector = self.ConvertKeywordsToVectors(keywords, weightings)  # gets user vector. Can take a while
+    """
+    Class to establish user vectors and produce dataframes from users keywords so we can choose
+    venues for the user and sort them in order of interest to user.
+    """
+    def __init__(self, keywords, weightings):
+        self.__user_vector = self.convert_keywords_to_vectors(keywords, weightings)
+        # gets user vector. Can take a while
         # depending on length of keywords list
-        self.__user_vector = preprocessing.normalize(self.__user_vector)  # normalise vector
+        self.__user_vector = preprocessing.normalize(self.__user_vector)
+        # normalise vector
 
     @property
     def get_user_vector(self):
+        """
+        :return: Users vector private numpy array size 300
+        """
         return self.__user_vector
 
-    @property
-    def get_df(self):
-        return self.__df
-
     @staticmethod
-    def CompositeVector(vectors):  # finds midpoint of list of vectors
+    def composite_vector(vectors):  # finds midpoint of list of vectors
+        """
+        Finds midpoint between list of vectors and normalises the result
+
+        :param vectors: list of numpy vectors of size (1, 300)
+        :return: normalised midpoint of vectors
+        """
         composite_vector = np.empty((1, 300))
-        for v in vectors:
-            composite_vector = v + composite_vector
+        for current_vector in vectors:
+            composite_vector = current_vector + composite_vector
         return preprocessing.normalize(composite_vector / len(vectors))
 
     @staticmethod
-    def ConvertKeywordsToVectors(keywords, weightings):
-        return TurnToVector(TreeCreation({}, keywords, weightings, 0, 1, [], '/Users/benlongcroft/Documents/Orfic/Orfic/K2K/transpositiontbl.pkl'))
-        # call Create Vector functions
+    def convert_keywords_to_vectors(keywords, weightings):
+        """
+        what it says on the tin. Converts a list of keywords into a 300 dimensional vector
 
-    def GetClosestVectors(self, valid_venues_df, user_vector):
+        :param keywords: Users keywords in list
+        :param weightings: weightings of keywords
+        :return: vector of keywords and weightings
+        """
+        return turn_to_vector(tree_creation({},
+                                            keywords,
+                                            weightings,
+                                            0, 1, [],
+                                         '/Users/benlongcroft/Documents/Orfic/Orfic/K2K'
+                                         '/transpositiontbl.pkl'))
+
+    def get_closest_vectors(self, valid_venues_df, user_vector):
+        """
+        Gets vectors closest to user vector from df
+
+        :param valid_venues_df: Pandas DataFrame of all valid venues
+        :param user_vector: users numpy vector
+        :return: sorted df by similarity to users vector
+        """
         user_vector = user_vector.reshape(1, 300)
         _similarity = []
-        for v in valid_venues_df['vector']:
-            v = np.array([float(x) for x in v[0].split(' ')]).reshape(1,
-                                                                      300)  # split the string vector and convert to
+        for vector in valid_venues_df['vector']:
+            vector = np.array([float(x) for x in vector[0].split(' ')]).reshape(1, 300)
+            # split the string vector and convert to
             # numpy array of floats
-            _cos = distance.euclidean(user_vector, v)
-            # TODO: This gets the euclidian distance between two vectors, maybe consider other metrics?
+            _cos = distance.euclidean(user_vector, vector)
             _similarity.append(_cos)
         valid_venues_df['similarity'] = _similarity
         valid_venues_df.sort_values(by=['similarity'], inplace=True,
