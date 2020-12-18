@@ -3,12 +3,10 @@ Engine behind K2K algorithm. This turns keywords into vectors and reweights them
 This has been optimised using a transposition table
 """
 import pickle
-from time import perf_counter
 import spacy
 import numpy as np
 from sklearn import preprocessing
 
-t1_start = perf_counter()
 nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
 
 lexemes = []  # get lexemes from pickled file and load into lexemes
@@ -18,19 +16,6 @@ for v in temp:
     lexemes.append(nlp.vocab[v])
 pickle_off.close()
 # TODO: Work out the ideal .prob value to use and streamline this function
-
-# lexemes = []
-# if nlp.vocab.lookups_extra.has_table("lexeme_prob"):
-#     nlp.vocab.lookups_extra.remove_table("lexeme_prob")
-# #
-# for orth in nlp.vocab.vectors:
-#     if nlp.vocab[orth].prob >= -12:
-#         lexemes.append(nlp.vocab[orth])
-
-t1_stop = perf_counter()  # time it
-print("Elapsed time:", t1_stop, t1_start)
-print("Action took in seconds:", t1_stop - t1_start)
-
 
 def get_related_words(word):
     """

@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 """
-Main function which calls each module and produces a list of create_packages to return to user
+Main function which calls each module and produces a list of packages to return to user
 
 """
-
+from time import perf_counter
 import pandas as pd
 import numpy as np
 from orfic.cli import cli
 from K2K.main import K2K
 
-
 if __name__ == '__main__':
+    t1_start = perf_counter()
+
     user_obj, my_package = cli()  # Get User object from cli() input
 
     keywords = user_obj.get_keywords  # get keywords for K2K
@@ -60,3 +61,4 @@ if __name__ == '__main__':
         packages.append(new_package)  # holds all create_packages
 
     print(packages)
+    print("Action took in seconds:", perf_counter())

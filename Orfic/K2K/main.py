@@ -8,7 +8,6 @@ import numpy as np
 from sklearn import preprocessing
 from .create_vector import tree_creation, turn_to_vector
 
-
 class K2K:
     """
     Class to establish user vectors and produce dataframes from users keywords so we can choose
