@@ -48,6 +48,14 @@ def cli():
                         help="Determine if user wants to remove gay clubs",
                         action="store_true")
 
+    parser.add_argument("--start_time",
+                        help="String input of start time",
+                        type=str)
+
+    parser.add_argument("--end_time",
+                        help="String input of end time",
+                        type=str)
+
     args = parser.parse_args()
 
     return get_venues(**vars(args)), create_packages(**vars(args))

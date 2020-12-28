@@ -6,7 +6,7 @@ Main function which calls each module and produces a list of packages to return 
 from time import perf_counter
 import pandas as pd
 import numpy as np
-from orfic.cli import cli
+from nitely.cli import cli
 from K2K.main import K2K
 
 if __name__ == '__main__':
@@ -55,8 +55,6 @@ if __name__ == '__main__':
                 index = valid_venues_df[valid_venues_df['venue_id'] == venue_id].index[0]
                 valid_venues_df = valid_venues_df.drop(index)
             except Exception as exception:
-
-                print(exception)
                 print('Record', venue_id, 'already removed!')
         packages.append(new_package)  # holds all create_packages
 
@@ -67,5 +65,5 @@ if __name__ == '__main__':
     Send packages back to website to display here
     this creates 'selected_package'
     """
-
-    # packages_with_timings = timings.timings(selected_package)
+    selected_package = packages[0]
+    user_obj.timings(selected_package)

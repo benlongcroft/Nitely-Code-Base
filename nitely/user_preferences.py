@@ -9,14 +9,14 @@ from geopy.distance import geodesic
 import pandas as pd
 import numpy as np
 from . import intensity
+import datetime
 
 
 class get_venues:
     """Gets all valid venues K2K can use based on their preferences"""
     def __init__(self, smartness, paid, date,
                  eighteen, location, location_distance,
-                 keywords, gay):
-
+                 keywords, gay, start_time, end_time):
         self.__paid = paid
         self.__eighteen = eighteen
         self.__keywords = keywords
@@ -24,6 +24,18 @@ class get_venues:
         self.__gay = gay
         db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
         self.cursor_obj = db_obj.cursor()  # instantiate a cursor for db
+
+        try:
+            _format_str = '%d%m%Y%H:%M'
+            # should be in format DDMMYYYY
+            _date_str = date
+            self.__start = datetime.datetime.strptime(_date_str+start_time, _format_str)
+            self.__end =  datetime.datetime.strptime(_date_str+end_time, _format_str)
+            # converts date and time into datetime object
+
+        except Exception as e:
+            print('Error when transferring into datetime object')
+            print(e)
 
         if location_distance > 50:
             print("Distance is too far to accurately represent club_data")
@@ -40,17 +52,6 @@ class get_venues:
             self.__smartness = smartness
         else:
             print('Smartness value is not within valid range')
-
-        try:
-            _format_str = '%d%m%Y'
-            # should be in format DDMMYYYY
-            _date_str = date
-            _datetime_obj = datetime.datetime.strptime(_date_str, _format_str)
-            # converts date into datetime object
-            self.__date = _datetime_obj.date()
-        except Exception as e:
-            print('Error when transferring into datetime object')
-            print(e)
 
     @property
     def get_keywords(self):
@@ -140,6 +141,16 @@ class get_venues:
             # add new column to valid venues to contain vectors
         return _vectors
 
+    def timings(self, package):
+        start_time = self.__start.time()
+        end_time = self.__end.time()
+        duration = self.__end - self.__start
+        average_minutes = (duration.seconds/60)/len(package)
+        print('Average Minutes at Venues:', average_minutes)
+        """
+        Here insert timings algo listed in book.
+        """
+
 
 class create_packages(get_venues):
     """
@@ -147,11 +158,12 @@ class create_packages(get_venues):
     """
     def __init__(self, smartness, paid, date,
                  eighteen, location, location_distance,
-                 keywords, gay):
+                 keywords, gay, start_time, end_time):
 
         super().__init__(smartness, paid, date,
                          eighteen, location, location_distance,
-                         keywords, gay)
+                         keywords, gay, start_time, end_time)
+
         # inherits GetVenues to use when generating create_packages.
 
     @staticmethod
@@ -176,7 +188,7 @@ class create_packages(get_venues):
             index = df[df['venue_id'] == venue_id].index[0]  # get index of venue_to_add
             df = df.drop(index)
             # remove locally from df so that we don't choose the same venue twice
-        except IndexError:
+        except IndexError as e:
             print(venue_id, 'already removed from df')
         return df
 
@@ -283,7 +295,8 @@ class create_packages(get_venues):
 
             vector = self.__str_to_vector(venue_to_add['vector'][0])
             # get vector of venue_to_add
-            composite_vector = K2KObj.composite_vector([user_vector, vector])
+            print(venue_to_add['venue_id'])
+            composite_vector = K2KObj.composite_vector([user_vector[0], vector[0]])
             # create composite vector of venue to add and user vector to establish what the next
             # vector will be
             location = {'lat': venue_to_add['address'].split(",")[0],
@@ -300,7 +313,6 @@ class create_packages(get_venues):
             # uses location to search for nearby clubs. There must be more than 10 locations
             # within 2 miles we look for clubs within half a mile and increase the step by 0.2
             # if we cannot find enough clubs.
-
             for venue_id in package['venue_id']:
                 df = self.__remove_venue(df, venue_id)
             # removes venues already in the package from the database
@@ -316,5 +328,4 @@ class create_packages(get_venues):
 
         return package
 
-    def timings(self, packages, start_time, duration):
 
