@@ -1,11 +1,11 @@
 Orfic Codebase Documentation
 ---
-###Introduction
+### Introduction
 This document aims to outline the Orfic backend codebase, it's customs, 
 modules and other general information useful for any further development on this 
 codebase. 
 ___
-###Typing and Naming Customs
+### Typing and Naming Customs
 All modules and functions should follow snake_case naming customs inline with 
 PEP008 python style guides
 
@@ -31,7 +31,7 @@ _i.e_
 
 _is correct_
 
-###Modules
+### Modules
 ____
 
 **The modules and their functions are listed below:**
@@ -47,7 +47,7 @@ into vectors, add vectors, create keyword trees and find vectors similar to a
 given vector. All vectors must be of size 300 to be compatible with this module.
 If orfic is the administrator, K2K is the computer that the administrator uses.
 
-###Databases
+### Databases
 ___
 _**ClubDataDB.db**_ - This contains all the venue information. It contains 6 tables
 which are linked via the relational model. It is relatively simple and is in 3rd Normal
@@ -56,7 +56,7 @@ is considered to be a gay club dress codes, dress ratings, addresses
 (which are coordinates currently for `GeoPy`), venue vectors, which types of venue each 
 venue is and the standard music genres played at the venues.
 
-###Modules used
+### Modules used
 ___
 `spaCy` - This is our trusty NLP library for loading word vectors and establishing similarity
 between them. We can also use it when loading raw data into our database to remove stop words 
@@ -81,13 +81,13 @@ size increases and the relations increase in complexity.
 
 `geopy` - Used to calculate physical distance between coordinates of venues
 
-###Output
+### Output
 ___
 Currently, the output of the program is to output 3 different packages containing the number of venues 
 the user wants to visit. This comes in the format of of 3 pandas dataframes. This can then be formatted 
 and processed.
 
-###Other Files
+### Other Files
 ___
 `LICENSE.md` - Contains the license information for the codebase
 
