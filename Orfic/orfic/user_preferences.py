@@ -60,7 +60,7 @@ class get_venues:
     @staticmethod
     def __get_distance_between_address(current_location, y_coordinates):
         """
-        Gets distance as crow flys between two addresses
+        Gets distance as crow flies between two addresses
 
         :param current_location: Users current location in coordinates
         :param y_coordinates: location to travel to in coordinates
@@ -315,3 +315,6 @@ class create_packages(get_venues):
             # correct intensity
 
         return package
+
+    def timings(self, packages, start_time, duration):
+

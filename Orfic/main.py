@@ -62,3 +62,10 @@ if __name__ == '__main__':
 
     print(packages)
     print("Action took in seconds:", perf_counter())
+
+    """
+    Send packages back to website to display here
+    this creates 'selected_package'
+    """
+
+    packages_with_timings = timings.timings(selected_package)

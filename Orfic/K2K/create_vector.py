@@ -15,7 +15,15 @@ temp = pickle.load(pickle_off)
 for v in temp:
     lexemes.append(nlp.vocab[v])
 pickle_off.close()
-# TODO: Work out the ideal .prob value to use and streamline this function
+# TODO: Work out the idword = nlp.vocab[word]  # get nlp vocab object for word
+#     _queries = []
+#     for _vocab_obj in lexemes:
+#         if _vocab_obj.is_lower:
+#             _queries.append(_vocab_obj)
+#     by_similarity = [[x.text, x.similarity(word)] for x in _queries]  # find similarity
+#     by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True)  # sort similarity
+#     if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
+#         del by_similarity[0]eal .prob value to use and streamline this function
 
 def get_related_words(word):
     """
@@ -24,15 +32,7 @@ def get_related_words(word):
     :param word: origin word. String format
     :return: list of 3 most similar words with their similarity via spacy to origin word
     """
-    word = nlp.vocab[word]  # get nlp vocab object for word
-    _queries = []
-    for _vocab_obj in lexemes:
-        if _vocab_obj.is_lower:
-            _queries.append(_vocab_obj)
-    by_similarity = [[x.text, x.similarity(word)] for x in _queries]  # find similarity
-    by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True)  # sort similarity
-    if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
-        del by_similarity[0]
+
     return by_similarity[:3]  # return three most similar words
 
 
