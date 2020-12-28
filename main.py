@@ -68,4 +68,4 @@ if __name__ == '__main__':
     this creates 'selected_package'
     """
 
-    packages_with_timings = timings.timings(selected_package)
+    # packages_with_timings = timings.timings(selected_package)
