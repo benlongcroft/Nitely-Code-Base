@@ -14,7 +14,7 @@
 #     return np.array(newlist)
 #
 # def get_data():
-#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/Orfic/ClubDataDB.db')  # connect to database
+#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Nitely/Nitely/ClubDataDB.db')  # connect to database
 #     cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 #
 #     _command = '''SELECT venue_vectors.vector FROM venue_vectors, venue_to_type
@@ -82,7 +82,7 @@
 # # save_model(model, './saved_model')
 #
 # def Testing(venue_id, model):
-#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/Orfic/ClubDataDB.db')  # connect to database
+#     db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Nitely/Nitely/ClubDataDB.db')  # connect to database
 #     cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 #     _command = '''SELECT venue_vectors.vector FROM venue_vectors WHERE venue_id = ?'''
 #     cursor_obj.execute(_command, (venue_id, ))
@@ -155,7 +155,7 @@ def CheckLink(url, name, town):
         if '/'+name+'/' in url and '/'+town+'/':
             return url
 
-db_obj = sqlite3.connect('/Users/benlongcroft/Documents/Orfic/skiddle/venues_skiddle.db')
+db_obj = sqlite3.connect('//skiddle/venues_skiddle.db')
 cursor_obj = db_obj.cursor()
 
 cursor_obj.execute('SELECT name, town FROM venues')

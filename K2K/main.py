@@ -53,8 +53,8 @@ class K2K:
                                             keywords,
                                             weightings,
                                             0, 1, [],
-                                         '/Users/benlongcroft/Documents/Orfic/Orfic/K2K'
-                                         '/transpositiontbl.pkl'))
+                                            '/Nitely/K2K'
+                                            '/transpositiontbl.pkl'))
 
     def get_closest_vectors(self, valid_venues_df, user_vector):
         """
