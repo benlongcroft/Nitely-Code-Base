@@ -5,7 +5,7 @@
 
 import argparse
 from .user_preferences import get_venues, create_packages
-
+from K2K.main import K2K
 
 def cli():
 
@@ -57,5 +57,6 @@ def cli():
                         type=str)
 
     args = parser.parse_args()
-
-    return get_venues(**vars(args)), create_packages(**vars(args))
+    args = vars(args)
+    print(args)
+    return get_venues(args), create_packages(args), K2K(args['keywords'], [x for x in range(len(args['keywords']))])

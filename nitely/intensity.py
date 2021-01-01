@@ -20,6 +20,25 @@ Analyses intensity of venue to establish whether it is ideal for its position in
 #     intensity = (intensity / len(list_of_words))
 #     return intensity
 
+def venue_type(venue, cursor, applicable_venue_types, df):
+    origin = venue
+    i = 1
+    while True:
+        venue_id = venue['venue_id']
+        venue_command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type, venues 
+                                   WHERE venue_to_type.venue_id == ? AND venue_to_type.venue_id = venues.venue_id'''
+        cursor.execute(venue_command, (venue_id,))
+        venue_types = [x[0] for x in cursor.fetchall()]
+        for t in venue_types:
+            if t in applicable_venue_types:
+                return venue
+            else:
+                if i == len(df):
+                    print('Chose original')
+                    return origin
+                else:
+                    venue = df.iloc[i]
+                    i = i + 1
 
 def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_music_types, df,
                            other_args):
@@ -52,7 +71,8 @@ def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_mus
 
         cursor.execute(music_command, (venue_id,))
         music_types = [x[0] for x in cursor.fetchall()]
-
+        print(music_types)
+        print(venue_types)
         for m_type in music_types:
             if m_type in applicable_music_types:
                 correct_music = True
@@ -69,5 +89,7 @@ def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_mus
             if i < len(df):
                 venue = df.iloc[i]
                 i = i + 1
+                print('New venue: ', venue['name'])
+                print('going round again')
             else:
                 return None

@@ -14,42 +14,34 @@ import datetime
 
 class get_venues:
     """Gets all valid venues K2K can use based on their preferences"""
-    def __init__(self, smartness, paid, date,
-                 eighteen, location, location_distance,
-                 keywords, gay, start_time, end_time):
-        self.__paid = paid
-        self.__eighteen = eighteen
-        self.__keywords = keywords
-        self.__location = {'lat': location.split(",")[0], 'lng': location.split(",")[1]}
-        self.__gay = gay
+    def __init__(self, kwargs):
+        self.__paid = kwargs['paid']
+        self.__eighteen = kwargs['eighteen']
+        self.__keywords = kwargs['keywords']
+        self.__location = {'lat': kwargs['location'].split(",")[0], 'lng': kwargs['location'].split(",")[1]}
+        self.__gay = kwargs['gay']
         db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
         self.cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 
         try:
             _format_str = '%d%m%Y%H:%M'
             # should be in format DDMMYYYY
-            _date_str = date
-            self.__start = datetime.datetime.strptime(_date_str+start_time, _format_str)
-            self.__end =  datetime.datetime.strptime(_date_str+end_time, _format_str)
+            _date_str = kwargs['date']
+            self.__start = datetime.datetime.strptime(_date_str+kwargs['start_time'], _format_str)
+            self.__end =  datetime.datetime.strptime(_date_str+kwargs['end_time'], _format_str)
             # converts date and time into datetime object
 
         except Exception as e:
             print('Error when transferring into datetime object')
             print(e)
 
-        if location_distance > 50:
+        if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
         else:
-            self.__total_distance_to_travel = location_distance
+            self.__total_distance_to_travel = kwargs['location_distance']
 
-        try:
-            self.__location_coordinates = location.split(',')
-        except Exception as exception:
-            print('Error splitting coordinates')
-            print(exception)
-
-        if (smartness <= 5) or (smartness >= 1):
-            self.__smartness = smartness
+        if (kwargs['smartness'] <= 5) or (kwargs['smartness'] >= 1):
+            self.__smartness = kwargs['smartness']
         else:
             print('Smartness value is not within valid range')
 
@@ -96,7 +88,7 @@ class get_venues:
         if self.__eighteen:
             _command = _command + ''' AND NOT age_restriction = "over 21s"'''
         if not self.__paid:
-            _command = _command + ''' AND entry_price = no door charge'''
+            _command = _command + ''' AND entry_price = "no door charge"'''
 
         # add to base command based on user preferences
         self.cursor_obj.execute(_command, (self.__smartness,))  # execute command
@@ -156,13 +148,11 @@ class create_packages(get_venues):
     """
     Generates package from valid venues
     """
-    def __init__(self, smartness, paid, date,
-                 eighteen, location, location_distance,
-                 keywords, gay, start_time, end_time):
+    def __init__(self, kwargs):
 
-        super().__init__(smartness, paid, date,
-                         eighteen, location, location_distance,
-                         keywords, gay, start_time, end_time)
+        super().__init__(kwargs)
+        self.__location = {'lat': kwargs['location'].split(",")[0],
+                           'lng': kwargs['location'].split(",")[1]}
 
         # inherits GetVenues to use when generating create_packages.
 
@@ -189,7 +179,8 @@ class create_packages(get_venues):
             df = df.drop(index)
             # remove locally from df so that we don't choose the same venue twice
         except IndexError as e:
-            print(venue_id, 'already removed from df')
+            # print(venue_id, 'already removed from df')
+            pass
         return df
 
     def desperate_search(self, venue_types, music_types, other_args):
@@ -203,16 +194,21 @@ class create_packages(get_venues):
         """
         radius_increase = 0.5
         venue_to_add = None
-        while venue_to_add.all() is None:
+        while venue_to_add is None:
             print('Entered into DESPERATE MODE!')
             # this only occurs if we cannot find a nightclub in the nearby area
             new_df = self.fetch_valid_venues(self.__location, radius=radius_increase)
-            new_df['vector'] = self.get_vectors(list(new_df['venue_id']))
-            venue_to_add = intensity.check_venue_music_type(venue_to_add,
-                                                            self.cursor_obj,
-                                                            venue_types,
-                                                            music_types,
-                                                            new_df, other_args)
+            print(len(new_df))
+            new_df = new_df.sort_values(by='distance')
+            if len(new_df) != 0:
+                new_df['vector'] = self.get_vectors(list(new_df['venue_id']))
+                venue_to_add = new_df.iloc[0]
+                venue_to_add = intensity.check_venue_music_type(venue_to_add,
+                                                                self.cursor_obj,
+                                                                venue_types,
+                                                                music_types,
+                                                                new_df, other_args)
+                print(venue_to_add)
             radius_increase = radius_increase + 0.5
         return venue_to_add
         # this simply checks to see if we can find any nightclubs near to the user's home location
@@ -220,56 +216,6 @@ class create_packages(get_venues):
         # we continue doing this until eventually we find a club nearby
         # (this method does not account for users preferences, it just goes into 'desperate
         # mode' and looks for any club)
-
-    def check_intensity(self, df, venue_to_add, venue_number, num_venues):
-        """
-        Checks whether the venue to add to the package is the correct level of 'intensity' for
-        its position in the night.
-
-        :param df: all valid venues by users preferences. Pandas DataFrame
-        :param venue_to_add: venue to add to package
-        :param venue_number: the position of the venue in the night
-        :param num_venues: the number of venues visited overall
-        :return: the correct venue to add to the package
-        """
-        _supposed_intensity = venue_number + 1 / num_venues
-        last_venue_types = [1, 11]
-        last_venue_music = [4, 7, 8, 9, 10, 11, 12, 14, 16, 19, 20, 21]
-
-        first_venue_types = [2, 4, 5, 7, 9]
-        first_venue_music = [1, 2, 3, 5, 6, 13, 15, 17, 18]
-
-        # work out how intense the venue should be
-        # where 0 is the least intense and 1 is the most intense
-        if venue_number == (num_venues - 1):  # if the venue is the last venue in the night
-            venue_to_add = intensity.check_venue_music_type(venue_to_add,
-                                                            self.cursor_obj,
-                                                            last_venue_types,
-                                                            last_venue_music,
-                                                            df, None)
-            if venue_to_add.all() is None:
-                venue_to_add = self.desperate_search(last_venue_types, last_venue_music, None)
-            # this simply ensures the music type and venue type of the last venue in the package
-            # are nightclubs with lively music
-
-        elif venue_number == 0:  # if the venue is the first venue in the night
-            other_args = '''AND venues.entry_price = "no door charge"'''
-            venue_to_add = intensity.check_venue_music_type(venue_to_add, self.cursor_obj,
-                                                            first_venue_types,
-                                                            first_venue_music,
-                                                            df, other_args)
-            if venue_to_add.all() is None:
-                venue_to_add = self.desperate_search(first_venue_types,
-                                                     first_venue_music,
-                                                     other_args)
-            # this simply ensures the music type and venue type of the last venue in
-            # the package are nightclubs with lively music
-        else:
-            pass
-            # TODO: Need to put in some kind of intensity routine here.
-            # Currently not worrying about it. Moving on...
-
-        return venue_to_add
 
     def generate_package(self, K2KObj, start_venue, user_vector, df, num_venues):
         """
@@ -288,14 +234,17 @@ class create_packages(get_venues):
         package = pd.DataFrame(columns=df.columns)
 
         for venue_number in range(num_venues):
-            correct_venue = self.check_intensity(df, venue_to_add, venue_number, num_venues)
-            venue_to_add = correct_venue
+            if venue_number == num_venues-1:
+                print('Last:', len(df))
+                venue_to_add = intensity.venue_type(venue_to_add, self.cursor_obj, [1, 11], df)
+            elif venue_number == 0:
+                print('First: ',len(df))
+                venue_to_add = intensity.venue_type(venue_to_add, self.cursor_obj, [2, 4, 5, 7, 9], df)
             # if correct_venue and venue_to_add are the same this will do nothing
             package = package.append(venue_to_add, ignore_index=True)
 
             vector = self.__str_to_vector(venue_to_add['vector'][0])
             # get vector of venue_to_add
-            print(venue_to_add['venue_id'])
             composite_vector = K2KObj.composite_vector([user_vector[0], vector[0]])
             # create composite vector of venue to add and user vector to establish what the next
             # vector will be
