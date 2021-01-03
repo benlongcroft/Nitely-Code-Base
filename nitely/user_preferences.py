@@ -14,11 +14,12 @@ import datetime
 
 class get_venues:
     """Gets all valid venues K2K can use based on their preferences"""
+
     def __init__(self, kwargs):
         self.__paid = kwargs['paid']
         self.__eighteen = kwargs['eighteen']
         self.__keywords = kwargs['keywords']
-        self.__location = {'lat': kwargs['location'].split(",")[0], 'lng': kwargs['location'].split(",")[1]}
+        self.__location = self.str_to_coordinates(kwargs['location'])
         self.__gay = kwargs['gay']
         db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
         self.cursor_obj = db_obj.cursor()  # instantiate a cursor for db
@@ -27,8 +28,9 @@ class get_venues:
             _format_str = '%d%m%Y%H:%M'
             # should be in format DDMMYYYY
             _date_str = kwargs['date']
-            self.__start = datetime.datetime.strptime(_date_str+kwargs['start_time'], _format_str)
-            self.__end =  datetime.datetime.strptime(_date_str+kwargs['end_time'], _format_str)
+            self.__start = datetime.datetime.strptime(_date_str + kwargs['start_time'],
+                                                      _format_str)
+            self.__end = datetime.datetime.strptime(_date_str + kwargs['end_time'], _format_str)
             # converts date and time into datetime object
 
         except Exception as e:
@@ -62,6 +64,17 @@ class get_venues:
         # use geopy geodesic module to get distance in miles and return it to function call
         return geodesic((y_coordinates['lat'], y_coordinates['lng']),
                         (current_location['lat'], current_location['lng'])).miles
+
+    @staticmethod
+    def str_to_coordinates(str_coordinates):
+        """
+        Converts comma separated coordinates to dictionary object of coordinates
+        :param str_coordinates: comma separated (no spaces) coordinates in str type
+        :return: dictionary {lat:[latitude], 'lng':[longitude]}
+        """
+        # Ideally method name would be prefixed with __ name mangling rules but is used by
+        # main.extend_NITE so this is not possible therefore has to be a public static method ew
+        return {'lat': str_coordinates.split(",")[0], 'lng': str_coordinates.split(",")[1]}
 
     def fetch_valid_venues(self, start_location, radius):
         """
@@ -137,7 +150,7 @@ class get_venues:
         start_time = self.__start.time()
         end_time = self.__end.time()
         duration = self.__end - self.__start
-        average_minutes = (duration.seconds/60)/len(package)
+        average_minutes = (duration.seconds / 60) / len(package)
         print('Average Minutes at Venues:', average_minutes)
         """
         Here insert timings algo listed in book.
@@ -148,6 +161,7 @@ class create_packages(get_venues):
     """
     Generates package from valid venues
     """
+
     def __init__(self, kwargs):
 
         super().__init__(kwargs)
@@ -234,13 +248,14 @@ class create_packages(get_venues):
         package = pd.DataFrame(columns=df.columns)
 
         for venue_number in range(num_venues):
-            if venue_number == num_venues-1:
+            if venue_number == num_venues - 1:
                 print('Last:', len(df))
                 venue_to_add = intensity.venue_type(venue_to_add, self.cursor_obj, [1, 11], df)
             elif venue_number == 0:
-                print('First: ',len(df))
-                venue_to_add = intensity.venue_type(venue_to_add, self.cursor_obj, [2, 4, 5, 7, 9], df)
-            # if correct_venue and venue_to_add are the same this will do nothing
+                print('First: ', len(df))
+                venue_to_add = intensity.venue_type(venue_to_add, self.cursor_obj,
+                                                    [2, 4, 5, 7, 9], df)
+
             package = package.append(venue_to_add, ignore_index=True)
 
             vector = self.__str_to_vector(venue_to_add['vector'][0])
@@ -248,14 +263,13 @@ class create_packages(get_venues):
             composite_vector = K2KObj.composite_vector([user_vector[0], vector[0]])
             # create composite vector of venue to add and user vector to establish what the next
             # vector will be
-            location = {'lat': venue_to_add['address'].split(",")[0],
-                        'lng': venue_to_add['address'].split(",")[1]}
+            location = self.str_to_coordinates(venue_to_add['address'])
             # gets location of venue_to_add
 
             increase_radius = 0.2
             while increase_radius <= 2:
                 df = self.fetch_valid_venues(location, radius=increase_radius)
-                if len(df) >= 10:
+                if len(df) >= 20:  # TODO: This value is stupid sometimes. Needs to be adjusted
                     break
                 increase_radius = increase_radius + 0.2
 
@@ -276,5 +290,3 @@ class create_packages(get_venues):
             # correct intensity
 
         return package
-
-
