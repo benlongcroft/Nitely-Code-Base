@@ -58,18 +58,18 @@ def create_random_kwargs():
         'smartness': random.randint(1, 5),
 
     }
-change = True
-while True:
-    if change == True:
-        new_session = create_random_kwargs()
-    print(new_session)
-    user_obj = get_venues(new_session)
-    my_packages = create_packages(new_session)
-    k2k_obj = K2K(new_session['keywords'], [1 for x in range(len(new_session['keywords']))])
-    packages = main(start_NITE(user_obj, my_packages, k2k_obj, radius=4))
-    op = input('Change? (y/n): ')
-    if op.lower() == 'n':
-        change = False
-    else:
-        change = True
+# change = True
+# while True:
+#     if change == True:
+#         new_session = create_random_kwargs()
+#     print(new_session)
+#     user_obj = get_venues(new_session)
+#     my_packages = create_packages(new_session)
+#     k2k_obj = K2K(new_session['keywords'], [1 for x in range(len(new_session['keywords']))])
+#     packages = main(start_NITE(user_obj, my_packages, k2k_obj, radius=4))
+#     op = input('Change? (y/n): ')
+#     if op.lower() == 'n':
+#         change = False
+#     else:
+#         change = True
 # user_obj.timings(selected_package)

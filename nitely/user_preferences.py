@@ -4,13 +4,12 @@ Calls K2K when necessary. Gets venue vectors, valid dataframes and returns creat
 
 """
 import sqlite3
-import datetime
 from geopy.distance import geodesic
 import pandas as pd
 import numpy as np
 from . import intensity
 import datetime
-
+import random
 
 class get_venues:
     """Gets all valid venues K2K can use based on their preferences"""
@@ -146,15 +145,12 @@ class get_venues:
             # add new column to valid venues to contain vectors
         return _vectors
 
-    def timings(self, package):
+    def timings(self, df, num_venues):
         start_time = self.__start.time()
         end_time = self.__end.time()
         duration = self.__end - self.__start
-        average_minutes = (duration.seconds / 60) / len(package)
+        average_minutes = (duration.seconds / 60) / num_venues
         print('Average Minutes at Venues:', average_minutes)
-        """
-        Here insert timings algo listed in book.
-        """
 
 
 class create_packages(get_venues):
@@ -173,7 +169,7 @@ class create_packages(get_venues):
     @staticmethod
     def __str_to_vector(vector_str):
         """
-
+        turns string from DB to numpy matrix
         :param vector_str: string of vector. Values space separated
         :return: numpy matrix of (1, 300) of vector
         """
@@ -231,6 +227,21 @@ class create_packages(get_venues):
         # (this method does not account for users preferences, it just goes into 'desperate
         # mode' and looks for any club)
 
+    @staticmethod
+    def __random_choice(df):
+        """
+        This chooses one of the top five venues randomly. This means that even if the user chooses
+        the same NITE options twice, it doesn't necessarily mean they will get the same NITE
+        :param df: dataframe of the top x venues by similarity
+        :return: a random choice from df
+        """
+        length = len(df)
+        choice = random.randint(0, length-1)
+        print(choice)
+        return df.iloc[choice]
+
+
+
     def generate_package(self, K2KObj, start_venue, user_vector, df, num_venues):
         """
         Generates the 'package' of the night which refers to every venue that the user should visit
@@ -284,9 +295,10 @@ class create_packages(get_venues):
             # adds vectors to database
             df = K2KObj.get_closest_vectors(df, composite_vector)
             # sorts database by vectors closest to our composite vector
-            venue_to_add = df.iloc[0]
+            self.timings(df, num_venues)
+            venue_to_add = self.__random_choice(df.head())
             # defines the next venue as the one with the closest to K2K score (provisionally,
             # we double check this at the start of every loop to ensure the venue has the
-            # correct intensity
+            # correct intensity)
 
         return package

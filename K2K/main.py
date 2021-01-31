@@ -8,11 +8,13 @@ import numpy as np
 from sklearn import preprocessing
 from .create_vector import tree_creation, turn_to_vector
 
+
 class K2K:
     """
     Class to establish user vectors and produce dataframes from users keywords so we can choose
     venues for the user and sort them in order of interest to user.
     """
+
     def __init__(self, keywords, weightings):
         self.__user_vector = self.convert_keywords_to_vectors(keywords, weightings)
         # gets user vector. Can take a while
@@ -43,7 +45,7 @@ class K2K:
     @staticmethod
     def convert_keywords_to_vectors(keywords, weightings):
         """
-        what it says on the tin. Converts a list of keywords into a 300 dimensional vector
+        Converts a list of keywords into a 300 dimensional vector
 
         :param keywords: Users keywords in list
         :param weightings: weightings of keywords
@@ -74,5 +76,5 @@ class K2K:
             _similarity.append(_cos)
         valid_venues_df['similarity'] = _similarity
         valid_venues_df.sort_values(by=['similarity'], inplace=True,
-                                    ignore_index=True)
+                                    ignore_index=True, ascending=False)
         return valid_venues_df  # returns all vectors and their distances from the user_vector

@@ -97,3 +97,33 @@ our vocabulary of words.
 
 `ClubData (dir)` - This contains the raw data that is in the database for backups sake as it was
 a massive pain to get in the first place.
+
+###Magic Words in Descriptions
+___
+Each description may contain a number of magic words, or words which are treated differently by the
+algorithm. This is done so that certain features of a venue can be better reflected in the 
+description. 
+
+The following contains the words and their usage cases:
+
+`food` - For any venues which serve any form of food
+
+`theme` - For any venues which are themed by culture, style or dress code
+
+`DJ` - For any venues which have a DJ on at least one night
+
+`beer` - For any venues which specialise in beer and craft beer
+
+`brunch` - For any venues which offer a 'boozy brunch' service
+
+`traditional` - For any pubs/bars which are set out in a stereotypical english way
+
+`cocktails` - For any venues which specialise in cocktails
+
+`terrace` - For any venues which contain an outdoor seating area
+
+`live` - For any venues which host live music/theatre events
+
+`wine` - For any venues which keep specialise in fine wines
+
+`sport` - For any venues which promote or show live sport 

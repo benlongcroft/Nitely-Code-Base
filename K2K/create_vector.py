@@ -15,6 +15,8 @@ temp = pickle.load(pickle_off)
 for v in temp:
     lexemes.append(nlp.vocab[v])
 pickle_off.close()
+
+
 # TODO: Work out the ideal .prob value to use and streamline this function
 
 def get_related_words(word):
@@ -134,10 +136,13 @@ def tree_creation(tree, words_to_add, scores_to_add,
     next_gen_words = []  # words to add at next generation
     next_gen_scores = []  # scores to add at next generation
     all_words_in_tree.extend(words_to_add)
-    # add inital words to all_words_in_tree so that we dont add duplicates
+    # add initial words to all_words_in_tree so that we dont add duplicates
 
     transposition_file_obj = open(transposition_file_path, 'rb')
-    tbl = pickle.load(transposition_file_obj)
+    try:
+        tbl = pickle.load(transposition_file_obj)
+    except EOFError:
+        tbl = []
     transposition_file_obj.close()
     words_for_transpos = []
     # opens transpos file and gets table, also define list to add new words too
