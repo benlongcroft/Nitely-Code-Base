@@ -7,8 +7,8 @@ import argparse
 from . import get_venues, create_packages
 from vector_k2k import K2K
 
-def cli():
 
+def cli():
     """
     Commandline arguments which can be called by script to execute orfic session if message is
     received from front end management service
@@ -59,4 +59,5 @@ def cli():
     args = parser.parse_args()
     args = vars(args)
     print(args)
-    return get_venues(args), create_packages(args), K2K(args['keywords'], [x for x in range(len(args['keywords']))])
+    return get_venues(args), create_packages(args), K2K(args['keywords'],
+                                                        [x for x in range(len(args['keywords']))])

@@ -2,6 +2,7 @@
 Analyses intensity of venue to establish whether it is ideal for its position in the night
 """
 
+
 # words = ['relaxed', 'relax', 'comfortable', 'calm', 'quiet', 'casual', 'pleasant', 'peaceful',
 #          'gentle', 'mood', 'warm', 'intimate', 'pleasant', 'soft', 'mild', 'subtle']
 
@@ -25,8 +26,8 @@ def venue_type(venue, cursor, applicable_venue_types, df):
     i = 1
     while True:
         venue_id = venue['venue_id']
-        venue_command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type, venues 
-                                   WHERE venue_to_type.venue_id == ? AND venue_to_type.venue_id = venues.venue_id'''
+        venue_command = '''SELECT venue_to_type.venue_type_id FROM venue_to_type, venues WHERE 
+        venue_to_type.venue_id == ? AND venue_to_type.venue_id = venues.venue_id'''
         cursor.execute(venue_command, (venue_id,))
         venue_types = [x[0] for x in cursor.fetchall()]
         for t in venue_types:
@@ -39,6 +40,7 @@ def venue_type(venue, cursor, applicable_venue_types, df):
                 else:
                     venue = df.iloc[i]
                     i = i + 1
+
 
 def check_venue_music_type(venue, cursor, applicable_venue_types, applicable_music_types, df,
                            other_args):
