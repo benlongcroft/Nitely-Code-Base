@@ -11,6 +11,7 @@ from nitely_core import intensity
 import datetime
 import random
 
+
 class get_venues:
     """Gets all valid venues K2K can use based on their preferences"""
 
@@ -189,7 +190,8 @@ class create_packages(get_venues):
             df = df.drop(index)
             # remove locally from df so that we don't choose the same venue twice
         except IndexError as e:
-            # print(venue_id, 'already removed from df')
+            print(venue_id, 'already removed from df')
+            print(e)
             pass
         return df
 
@@ -236,11 +238,9 @@ class create_packages(get_venues):
         :return: a random choice from df
         """
         length = len(df)
-        choice = random.randint(0, length-1)
+        choice = random.randint(0, length - 1)
         print(choice)
         return df.iloc[choice]
-
-
 
     def generate_package(self, K2KObj, start_venue, user_vector, df, num_venues):
         """
