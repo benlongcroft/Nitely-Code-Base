@@ -10,7 +10,7 @@ from sklearn import preprocessing
 nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
 
 lexemes = []  # get lexemes from pickled file and load into lexemes
-pickle_off = open("./K2K/lexemes.pkl", "rb")
+pickle_off = open("./vector_k2k/lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
 for v in temp:
     lexemes.append(nlp.vocab[v])

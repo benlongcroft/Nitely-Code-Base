@@ -1,5 +1,5 @@
 import sqlite3
-from K2K.main import K2K
+from vector_k2k import K2K
 from math import log
 from statistics import stdev
 from time import perf_counter
@@ -162,7 +162,7 @@ import pickle
 with open('club_vectors_31-01-2021.txt', 'wb') as fh:
    pickle.dump(club_vectors_total, fh)
 
-output_file("lines.html")
+output_file("../lines.html")
 p = figure(title="Vectors", x_axis_label='dim', y_axis_label='scale')
 r = lambda: random.randint(0, 255)
 for d in club_vectors_total:

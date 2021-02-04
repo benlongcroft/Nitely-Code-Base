@@ -7,7 +7,7 @@ import sqlite3
 from geopy.distance import geodesic
 import pandas as pd
 import numpy as np
-from . import intensity
+from nitely_core import intensity
 import datetime
 import random
 
@@ -20,7 +20,7 @@ class get_venues:
         self.__keywords = kwargs['keywords']
         self.__location = self.str_to_coordinates(kwargs['location'])
         self.__gay = kwargs['gay']
-        db_obj = sqlite3.connect('./ClubDataDB.db')  # connect to database
+        db_obj = sqlite3.connect('../nitely/ClubDataDB.db')  # connect to database
         self.cursor_obj = db_obj.cursor()  # instantiate a cursor for db
 
         try:

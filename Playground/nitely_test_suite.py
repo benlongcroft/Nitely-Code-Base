@@ -1,18 +1,9 @@
-import pytest
-from main import start_NITE
-from nitely.user_preferences import create_packages, get_venues
-from K2K.main import K2K
 import random
-import datetime
 import math
-from time import perf_counter
-import pandas as pd
-import numpy as np
-from main import main
 
 
 def get_random_keywords():
-    all_words = open('all_words.txt', 'r')
+    all_words = open('../all_words.txt', 'r')
     words = []
     for word in all_words.readlines():
         word = word.strip()

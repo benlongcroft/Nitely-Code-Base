@@ -4,8 +4,8 @@
 """
 
 import argparse
-from .user_preferences import get_venues, create_packages
-from K2K.main import K2K
+from . import get_venues, create_packages
+from vector_k2k import K2K
 
 def cli():
 

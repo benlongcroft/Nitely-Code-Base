@@ -6,7 +6,7 @@ Main function which calls each module and produces a list of packages to return 
 from time import perf_counter
 import pandas as pd
 import numpy as np
-from nitely.cli import cli
+from nitely_core.cli import cli
 
 
 class start_NITE:
