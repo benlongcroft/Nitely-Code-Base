@@ -57,10 +57,6 @@ class start_NITE:
 
 
 def main(new_nite):
-    t1_start = perf_counter()
-
-    keywords = new_nite.get_keywords  # get keywords for K2K
-
     valid_venues_df = new_nite.get_df(
         start_location='51.4889785,-0.1416508')  # get all valid vectors with distances
 
@@ -84,10 +80,9 @@ def main(new_nite):
     # new_vectors.append(new_nite.composite_vector([new_vectors[0], new_vectors[1]]))
     # create a composite vector of both of the previous vectors
 
-    packages = []
+    user_packages = []
     package_columns = list(valid_venues_df.columns)
     package_columns.append('similarity')
-    current_package = pd.DataFrame(columns=package_columns)
 
     for v in new_vectors:
         df = new_nite.add_similarity(valid_venues_df, v)
@@ -96,18 +91,18 @@ def main(new_nite):
         new_package = new_nite.create_package(starting_venue, v, df, 3)
         # get the package based on vector
         valid_venues_df = new_nite.drop_used_venues(new_package, df)
-        packages.append(new_package)  # holds all create_packages
+        user_packages.append(new_package)  # holds all create_packages
 
     pd.set_option('display.max_columns', None)
     pd.set_option('display.max_rows', None)
-    # print(packages)
+    # print(user_packages)
     print("Action took in seconds:", perf_counter())
 
     """
-    Send packages back to website to display here
+    Send user_packages back to website to display here
     this creates 'selected_package'
     """
-    return packages, new_nite
+    return user_packages, new_nite
 
 
 def extend_NITE(selected_package, current_nite):
@@ -120,6 +115,7 @@ def extend_NITE(selected_package, current_nite):
     new_package = current_nite.create_package(starting_venue, user_vector,
                                               df, 2)
     return new_package.iloc[-1]
+
 
 if __name__ == '__main__':
     packages, nite = main(start_NITE(*cli(), radius=4))
