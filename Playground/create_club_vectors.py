@@ -93,12 +93,11 @@ class weighting_object:
         return dictionary
 
     def normalise_tfidf(self, dictionary):
-        d_mean = sum(dictionary.values())/len(dictionary)
+        d_mean = sum(dictionary.values()) / len(dictionary)
         d_stdev = stdev(dictionary.values())
         for word, score in dictionary.items():
-            dictionary[word] = (score - d_mean)/d_stdev
+            dictionary[word] = (score - d_mean) / d_stdev
         return dictionary
-
 
     @property
     def populate_dictionary(self):
@@ -122,6 +121,16 @@ class weighting_object:
         return self.__dictionary
 
 
+def weight(word):
+    magic_words = {'food', 'theme', 'dj', 'beer', 'brunch', 'traditional',
+                   'cocktails', 'terrace', 'live', 'wine', 'sports', 'gay',
+                   'bar', 'pub', 'club', 'other'}
+    if word in magic_words:
+        return 0.5
+    else:
+        return 1
+
+
 db = sqlite3.connect('/Users/benlongcroft/Documents/Nitely Project/NewDB/ExperimentalOrficDB.db')
 cur = db.cursor()
 
@@ -133,10 +142,8 @@ for item in cur.fetchall():
     descriptions.append(list(set(des)))
 
 # descriptions = [list(set(x[0].split(', '))) for x in cur.fetchall()]
-print(descriptions)
 weightings = weighting_object(descriptions).populate_dictionary
 res = {key: val for key, val in sorted(weightings.items(), key=lambda ele: ele[1])}
-print(res)
 done = 0
 club_vectors_total = []
 time_taken = []
@@ -146,8 +153,9 @@ for d in descriptions:
     else:
         t1_start = perf_counter()
         # w = [weightings[word.lower()] for word in d]
-        k = K2K(d, [1 for x in range(len(d))])
+        k = K2K(d, [weight(x) for x in d])
         print(d)
+        print([weight(x) for x in d])
         club_vectors_total.append(k.get_user_vector)
 
         done = done + 1
@@ -159,8 +167,9 @@ for d in descriptions:
 from bokeh.plotting import figure, output_file, show
 import random
 import pickle
+
 with open('club_vectors_31-01-2021.txt', 'wb') as fh:
-   pickle.dump(club_vectors_total, fh)
+    pickle.dump(club_vectors_total, fh)
 
 output_file("../lines.html")
 p = figure(title="Vectors", x_axis_label='dim', y_axis_label='scale')
@@ -169,5 +178,5 @@ for d in club_vectors_total:
     col = ('#%02X%02X%02X' % (r(), r(), r()))
     p.line([f for f in range(300)], d.reshape(300), line_width=1, color=col, legend_label="live")
 show(p)
-# TODO: 'Need food, Text FOOD to this number to make your next location snackable!' using food tag
+
 # TODO: Create a 'some of our favourites section' which are handpicked routes through newcastle - delegate to Hugo?
