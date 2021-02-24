@@ -4,8 +4,6 @@
 """
 
 import argparse
-from . import get_venues, create_packages
-from vector_k2k import K2K
 
 
 def cli():
@@ -15,21 +13,10 @@ def cli():
     """
 
     parser = argparse.ArgumentParser(prog="main")
-    parser.add_argument("--smartness",
-                        help="Smartness of Dress",
-                        type=int)
-
-    parser.add_argument("--paid",
-                        help="Check for free entry criteria",
-                        action="store_true")
 
     parser.add_argument("--date",
                         help="String input of date",
                         type=str)
-
-    parser.add_argument("--eighteen",
-                        help="Check if user only wants 18+ clubs",
-                        action="store_true")
 
     parser.add_argument("--location",
                         help='coordinates separated by a comma i.e lat,long',
@@ -44,9 +31,10 @@ def cli():
                         nargs='+',
                         type=str)
 
-    parser.add_argument("--gay",
-                        help="Determine if user wants to remove gay clubs",
-                        action="store_true")
+    parser.add_argument("--magic_words",
+                        help="Users magic words",
+                        nargs="+",
+                        type=str)
 
     parser.add_argument("--start_time",
                         help="String input of start time",
@@ -56,8 +44,16 @@ def cli():
                         help="String input of end time",
                         type=str)
 
+    parser.add_argument("--telephone",
+                        help="Users telephone",
+                        type=str)
+
+    parser.add_argument("--name",
+                        help="Users name",
+                        type=str)
+
+
     args = parser.parse_args()
     args = vars(args)
     print(args)
-    return get_venues(args), create_packages(args), K2K(args['keywords'],
-                                                        [x for x in range(len(args['keywords']))])
+    return args
