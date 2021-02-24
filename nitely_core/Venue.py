@@ -2,11 +2,17 @@ import numpy as np
 
 
 class venue:
-    def __init__(self, name, description, location, venue_type, timings, vector):
+    def __init__(self, venue_id, name, description,
+                 location, venue_type, restaurant,
+                 club, vector, timings):
+        type_to_bin = {'pub': '000', 'bar': '001', 'club': '010', 'other': '011', 'live': '100'}
+        self.__id = venue_id
         self.__name = name
         self.__description = description
         self.__location = location
-        self.__venue_type = venue_type
+
+        self.__venue_type = type_to_bin[venue_type] + str(restaurant) + str(club)
+
         self.__timings = timings
         self.__vector = self.__str_to_vector(vector)
 
@@ -27,6 +33,9 @@ class venue:
 
     def get_vector(self):
         return self.__vector
+
+    def get_id(self):
+        return self.__id
 
     def __str_to_vector(self, vector_str):
         """

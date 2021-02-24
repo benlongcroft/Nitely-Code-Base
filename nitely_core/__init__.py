@@ -2,6 +2,9 @@ from Account import account
 from Preferences import preferences
 from User import user
 import datetime
+import sqlite3
+from geopy.distance import geodesic
+from Venue import venue
 
 
 def str_to_coordinates(str_coordinates):
@@ -29,9 +32,20 @@ def convert_to_datetime(start_time, end_time, date):
         print(e)
 
 
+def get_distance_between_coords(current_location, y_coordinates):
+    """
+    Gets distance as crow flies between two addresses
+
+    :param current_location: Users current location in coordinates
+    :param y_coordinates: location to travel to in coordinates
+    :return: Distance in miles between coordinates
+    """
+    # use geopy geodesic module to get distance in miles and return it to function call
+    return geodesic((y_coordinates['lat'], y_coordinates['lng']),
+                    (current_location['lat'], current_location['lng'])).miles
+
 class start_NITE:
     def __init__(self, kwargs):
-        date = kwargs['date']
         location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
@@ -54,6 +68,9 @@ class start_NITE:
                                               start_time,
                                               end_time)
         self.__user = user(self.__user_preferences, self.__user_account)
+        self.db_obj = sqlite3.connect('FILL IN')  # connect to database
+        # TODO: move db to accessible location
+        self.cursor_obj = self.db_obj.cursor()
 
     def get_account(self):
         return self.__user_account
@@ -63,3 +80,51 @@ class start_NITE:
 
     def get_user(self):
         return self.__user
+
+    def get_nearby_venues(self):
+        """
+        Uses user to get all venues which fit our users criteria using custom SQL
+        command.
+
+        :return: list of venue objects that are valid for use
+        """
+        location = self.__user.get_location()
+        radius = self.__user.get_location_distance()
+        magic_words = self.__user.get_magic_words()
+        venues = []
+
+        self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
+
+        for record in self.cursor_obj.fetchall():
+            record = list(record)  # turn record from tuple to list
+            venue_id = record[0]
+            record_coordinates = {'lat': record[-1].split(" ")[0],
+                                  'lng': record[-1].split(" ")[1]}
+            # get coordinates and split them into a dictionary
+
+            distance = get_distance_between_coords(location, record_coordinates)
+            # get distance between address and venues
+
+            if distance <= radius:
+                venues.append(venue_id)
+
+        valid_venue_objs = []
+        for venue_id in venues:
+            self.cursor_obj.execute('''SELECT id, name, description, location, type, restaurant, 
+                                        club, vector FROM venue_info WHERE id = ?''', venue_id)
+            venue_data = [x[0] for x in self.cursor_obj.fetchall()[0]]
+            self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''', venue_id)
+            timing_data = [x[0] for x in self.cursor_obj.fetchall()]
+            print(timing_data)
+            valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
+                                          venue_data[3], venue[4], venue[5],
+                                          venue[6], venue[7]))
+
+        # TODO add the timings object to venue instantiation
+        return valid_venue_objs
+
+    def get_similarity(self, venues):
+        pass
+
+    def create_packages(self, venues, venue_similarity):
+        pass
