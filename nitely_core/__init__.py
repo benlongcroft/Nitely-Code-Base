@@ -5,7 +5,7 @@ import datetime
 import sqlite3
 from geopy.distance import geodesic
 from Venue import venue
-
+from Timings import timings
 
 def str_to_coordinates(str_coordinates):
     """
@@ -90,9 +90,9 @@ class start_NITE:
 
         :return: list of venue objects that are valid for use
         """
-        location = self.__user.get_location()
-        radius = self.__user.get_location_distance()
-        magic_words = self.__user.get_magic_words()
+        location = self.__user.get_location
+        radius = self.__user.get_location_distance
+        magic_words = self.__user.get_magic_words
         venues = []
 
         self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
@@ -112,16 +112,22 @@ class start_NITE:
 
         valid_venue_objs = []
         for venue_id in venues:
+            venue_id = str(venue_id)
             self.cursor_obj.execute('''SELECT id, name, description, location, type, restaurant, 
-                                        club, vector FROM venue_info WHERE id = ?''', venue_id)
-            venue_data = [x[0] for x in self.cursor_obj.fetchall()[0]]
+                                        club, vector FROM venue_info WHERE id = ?''', (venue_id,))
+            venue_data = [*(self.cursor_obj.fetchall()[0])]
             self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
-                                    venue_id)
-            timing_data = [x[0] for x in self.cursor_obj.fetchall()]
-            print(timing_data)
+                                    (venue_id,))
+            timing_data = [*self.cursor_obj.fetchall()]
+            open = {}
+            close = {}
+            for day in timing_data:
+                open[day[0]] = day[1]
+                close[day[0]] = day[2]
+
             valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
-                                          venue_data[3], venue[4], venue[5],
-                                          venue[6], venue[7]))
+                                          venue_data[3], venue_data[4], venue_data[5],
+                                          venue_data[6], venue_data[7], timings(open, close)))
 
         # TODO add the timings object to venue instantiation
         return valid_venue_objs
