@@ -11,5 +11,6 @@ class timings:
         else:
             return ValueError
 
+    @property
     def get_timings(self):
         return self.__start_times, self.__end_times
