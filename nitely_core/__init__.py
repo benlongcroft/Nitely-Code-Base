@@ -44,6 +44,7 @@ def get_distance_between_coords(current_location, y_coordinates):
     return geodesic((y_coordinates['lat'], y_coordinates['lng']),
                     (current_location['lat'], current_location['lng'])).miles
 
+
 class start_NITE:
     def __init__(self, kwargs):
         location = str_to_coordinates(kwargs['location'])
@@ -68,7 +69,8 @@ class start_NITE:
                                               start_time,
                                               end_time)
         self.__user = user(self.__user_preferences, self.__user_account)
-        self.db_obj = sqlite3.connect('FILL IN')  # connect to database
+        self.db_obj = sqlite3.connect(
+            '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')  # connect to database
         # TODO: move db to accessible location
         self.cursor_obj = self.db_obj.cursor()
 
@@ -113,7 +115,8 @@ class start_NITE:
             self.cursor_obj.execute('''SELECT id, name, description, location, type, restaurant, 
                                         club, vector FROM venue_info WHERE id = ?''', venue_id)
             venue_data = [x[0] for x in self.cursor_obj.fetchall()[0]]
-            self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''', venue_id)
+            self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
+                                    venue_id)
             timing_data = [x[0] for x in self.cursor_obj.fetchall()]
             print(timing_data)
             valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
