@@ -1,5 +1,8 @@
-from nitely_core import Account, Preferences, User
+from Account import account
+from Preferences import preferences
+from User import user
 import datetime
+
 
 def str_to_coordinates(str_coordinates):
     """
@@ -9,14 +12,15 @@ def str_to_coordinates(str_coordinates):
     """
     return {'lat': str_coordinates.split(",")[0], 'lng': str_coordinates.split(",")[1]}
 
-def convert_to_datetime(start_time, end_time, date)
+
+def convert_to_datetime(start_time, end_time, date):
     try:
         _format_str = '%d%m%Y%H:%M'
         # should be in format DDMMYYYY
         _date_str = date
-        start = datetime.datetime.strptime(_date_str + kwargs['start_time'],
-                                                  _format_str)
-        end = datetime.datetime.strptime(_date_str + kwargs['end_time'], _format_str)
+        start = datetime.datetime.strptime(_date_str + start_time,
+                                           _format_str)
+        end = datetime.datetime.strptime(_date_str + end_time, _format_str)
         return start, end
         # converts date and time into datetime object
 
@@ -31,6 +35,7 @@ class start_NITE:
         location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
+            location_distance = 49
         else:
             location_distance = kwargs['location_distance']
         keywords = kwargs['keywords']
@@ -41,14 +46,14 @@ class start_NITE:
         telephone = kwargs['telephone']
         user_name = kwargs['name']
 
-        self.__user_account = Account(user_name, telephone)
-        self.__user_preferences = Preferences(keywords,
+        self.__user_account = account(user_name, telephone)
+        self.__user_preferences = preferences(keywords,
                                               location,
                                               location_distance,
                                               users_magic_words,
                                               start_time,
                                               end_time)
-        self.__user = User(Account, Preferences)
+        self.__user = user(self.__user_preferences, self.__user_account)
 
     def get_account(self):
         return self.__user_account
@@ -58,4 +63,3 @@ class start_NITE:
 
     def get_user(self):
         return self.__user
-
