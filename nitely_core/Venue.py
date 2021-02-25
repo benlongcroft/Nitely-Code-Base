@@ -44,6 +44,11 @@ class venue:
         :return: numpy matrix of (1, 300) of vector
         """
         vector_str = vector_str.split(' ')
-        vector_str = vector_str[0:]
-        #TODO: Fix this method because the vectors are not in the database correctly
-        return np.array([float(x) for x in vector_str.split(' ')]).reshape(1, 300)
+        vec = ''
+        for val in vector_str:
+            if val == '':
+                continue
+            else:
+                vec = vec + ' ' + val
+        # TODO: Fix this method because its shit
+        return np.array([float(x) for x in vec.split(' ')[1:]]).reshape(1, 300)

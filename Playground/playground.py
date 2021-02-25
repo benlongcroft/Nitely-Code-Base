@@ -188,10 +188,25 @@ import time
 #     print(l.text)
 
 import sqlite3
+import pickle
 
 db_obj = sqlite3.connect(
-    '/Users/benlongcroft/Documents/Nitely Project/NewDB/ExperimentalOrficDB.db')
+    '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
 cursor_obj = db_obj.cursor()
+
+pickle_off = open("/Users/benlongcroft/Documents/Nitely Project/Nitely/club_vectors_pkl/club_vectors_0.75-1.txt", "rb")
+vectors = pickle.load(pickle_off)
+cursor_obj.execute('''SELECT id FROM venue_info  WHERE description != "DO NOT USE"''')
+ids = [x[0] for x in cursor_obj.fetchall()]
+print(len(ids))
+print(len(vectors))
+for i, _ in enumerate(ids):
+    vector = str(vectors[i][0])
+    vector = vector.replace('[', '')
+    vector = vector.replace(']', '')
+    vector = vector.replace('\n', '')
+    cursor_obj.execute('''UPDATE venue_info SET vector = ? WHERE id = ?''', (str(vector), ids[i],))
+db_obj.commit()
 
 # cursor_obj.execute('''SELECT DISTINCT venue_id FROM by_week WHERE venue_id IN (SELECT id FROM venue_info  WHERE description = 'DO NOT USE') ORDER BY venue_id ASC''')
 # venue_ids = [x[0] for x in cursor_obj.fetchall()]
@@ -224,38 +239,38 @@ not_use = [111, 152, 186, 212, 220]
 #     sorted_dict[w] = dictionary[w]
 #
 # print(sorted_dict)
-import pickle
-import random
-
-pickle_off = open("club_vectors_30-01-2021.txt", "rb")
-vectors = pickle.load(pickle_off)
-print(len(vectors))
-cursor_obj.execute('''SELECT id FROM venue_info  WHERE description != 'DO NOT USE';''')
-ids = [x[0] for x in cursor_obj.fetchall()]
-
-from scipy.spatial import distance
-
-
-def get_similarity(vectors, ids):
-    for i, vec1 in enumerate(vectors):
-        vec1_id = ids[i]
-        for x, vec2 in enumerate(vectors):
-            vec2_id = ids[x]
-            print('Similarity:', vec1_id, '-', vec2_id, '-->', distance.euclidean(vec1, vec2))
-
-
-random_vector_index = lambda: random.randint(0, len(vectors) - 1)
-q = [random_vector_index() for x in range(3)]
-vec_ids = [ids[x] for x in q]
-vectors = [vectors[x] for x in q]
-print(vec_ids)
-get_similarity(vectors, vec_ids)
-
-
-def find_similar(vectors, ids, vec):
-    scores = []
-    for i, vector in enumerate(vectors):
-        scores.append([ids[i], distance.euclidean(vector, vec)])
-    return sorted(scores, key=lambda l: l[1], reverse=True)
+# import pickle
+# import random
+#
+# pickle_off = open("club_vectors_30-01-2021.txt", "rb")
+# vectors = pickle.load(pickle_off)
+# print(len(vectors))
+# cursor_obj.execute('''SELECT id FROM venue_info  WHERE description != 'DO NOT USE';''')
+# ids = [x[0] for x in cursor_obj.fetchall()]
+#
+# from scipy.spatial import distance
+#
+#
+# def get_similarity(vectors, ids):
+#     for i, vec1 in enumerate(vectors):
+#         vec1_id = ids[i]
+#         for x, vec2 in enumerate(vectors):
+#             vec2_id = ids[x]
+#             print('Similarity:', vec1_id, '-', vec2_id, '-->', distance.euclidean(vec1, vec2))
+#
+#
+# random_vector_index = lambda: random.randint(0, len(vectors) - 1)
+# q = [random_vector_index() for x in range(3)]
+# vec_ids = [ids[x] for x in q]
+# vectors = [vectors[x] for x in q]
+# print(vec_ids)
+# get_similarity(vectors, vec_ids)
+#
+#
+# def find_similar(vectors, ids, vec):
+#     scores = []
+#     for i, vector in enumerate(vectors):
+#         scores.append([ids[i], distance.euclidean(vector, vec)])
+#     return sorted(scores, key=lambda l: l[1], reverse=True)
 
 # find_similar(vectors, ids, vectors[171])

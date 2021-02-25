@@ -39,7 +39,7 @@ db_obj = sqlite3.connect(
     '/Users/benlongcroft/Documents/Nitely Project/NewDB/ExperimentalOrficDB.db')
 cursor_obj = db_obj.cursor()
 
-pickle_off = open("./club_vectors_10-02-2021-other.txt", "rb")
+pickle_off = open("./club_vectors_0.5-1.txt", "rb")
 vectors = pickle.load(pickle_off)
 vectors = [x[0] for x in vectors]
 
