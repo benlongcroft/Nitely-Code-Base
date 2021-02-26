@@ -8,7 +8,7 @@ import argparse
 
 def cli():
     """
-    Commandline arguments which can be called by script to execute orfic session if message is
+    Commandline arguments which can be called by script to execute NITE session if message is
     received from front end management service
     """
 
@@ -51,7 +51,6 @@ def cli():
     parser.add_argument("--name",
                         help="Users name",
                         type=str)
-
 
     args = parser.parse_args()
     args = vars(args)
