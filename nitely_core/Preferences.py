@@ -1,6 +1,17 @@
 class preferences:
+    """preferences object which holds the users preferences for a specific NITE - when paired with
+    a account object it can create a user object via inheritance"""
     def __init__(self, keywords, location, location_distance,
                  magic_words, start_time, end_time):
+        """
+        Constructor object - saves each parameter as a private attribute
+        :param keywords: the keywords of the user - may contain magic words
+        :param location: the location of the user - coordinates from start_NITE in dict format
+        :param location_distance: total distance the user wants to travel from location
+        :param magic_words: all magic words in keywords
+        :param start_time: datetime object for start of NITE
+        :param end_time: datetime object for end of NITE
+        """
         self.__keywords = keywords
         self.__location = location
         self.__location_distance = location_distance

@@ -79,13 +79,17 @@ class start_NITE:
         user_name = kwargs['name']
 
         self.__user_account = account(user_name, telephone)
+        # creates account object for user
         self.__user_preferences = preferences(keywords,
                                               location,
                                               location_distance,
                                               users_magic_words,
                                               start_time,
                                               end_time)
+        # creates preferences object for user
         self.__user = user(self.__user_preferences, self.__user_account)
+        # passes account and preferences object to user object - user object will inherit all
+        # methods and attributes
         self.db_obj = sqlite3.connect(
             '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
         # connect to database
