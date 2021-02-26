@@ -6,7 +6,18 @@ import sqlite3
 from geopy.distance import geodesic
 from Venue import venue
 from Timings import timings
+from Package import package
 from scipy.spatial import distance
+
+
+def find_max_in_dict(dictionary):
+    max_key = ''
+    max_value = 0
+    for key in dictionary.keys():
+        value = dictionary[key]
+        if value > max_value:
+            max_key = key
+    return max_key
 
 
 def str_to_coordinates(str_coordinates):
@@ -59,6 +70,7 @@ class start_NITE:
     """
     start_NITE creates a new session from the arguments given on command line
     """
+
     def __init__(self, kwargs):
         """
         Constructor converts kwargs to valid formats and connects to database
@@ -104,15 +116,13 @@ class start_NITE:
     def get_user(self):
         return self.__user
 
-    def get_nearby_venues(self):
+    def get_nearby_venues(self, location, radius):
         """
         Uses user object to get all venues which fit our users criteria using custom SQL
         command.
 
         :return: list of venue objects that are valid for use
         """
-        location = self.__user.get_location
-        radius = self.__user.get_location_distance
         magic_words = self.__user.get_magic_words
         # TODO: Implement magic word functionality to filter results better
         venues = []
@@ -126,10 +136,10 @@ class start_NITE:
                                   'lng': record[-1].split(" ")[1]}
             # get coordinates and split them into a dictionary
 
-            distance = get_distance_between_coords(location, record_coordinates)
+            _distance = get_distance_between_coords(location, record_coordinates)
             # get distance between address and venues
 
-            if distance <= radius:
+            if _distance <= radius:
                 venues.append(venue_id)
 
         valid_venue_objs = []
@@ -172,5 +182,40 @@ class start_NITE:
             similarity[venue_obj] = cos
         return similarity
 
-    def create_packages(self, venues, venue_similarity):
-        pass
+    def create_packages(self, K2K, user_obj,
+                        num_venues, venue_similarity, start_venue):
+        package_venues = []
+        if start_venue is None:
+            start_venue = find_max_in_dict(venue_similarity)
+            # also apply pres here
+        venue_to_add = start_venue
+        for venue_number in range(num_venues):
+            if venue_number == (num_venues - 1):
+                # if last venue, apply finale
+                # TODO: Apply intensity finale and pres
+                pass
+            elif venue_number == 0:
+                # if first venue, apply pres
+                pass
+            package_venues.append(venue_to_add)
+            vector = venue_to_add.get_vector
+            composite_vector = K2K.composite_vector([user_obj.get_vector, vector])
+            location = venue_to_add.get_location
+
+            increase_radius = 0.2
+            while increase_radius <= 2:
+                new_venues = self.get_nearby_venues(location, radius=increase_radius)
+                if len(new_venues) >= 20:
+                    # TODO: This value is stupid sometimes. Needs to be adjusted
+                    break
+                increase_radius = increase_radius + 0.2
+
+            valid_venues = []
+            for venue_obj in new_venues:
+                if venue_obj not in package_venues:
+                    valid_venues.append(venue_obj)
+
+            similarity_scores = self.get_similarity(valid_venues, composite_vector)
+            venue_to_add = find_max_in_dict(similarity_scores)
+            # TODO: implement timings algo
+        return package(venue_to_add)
