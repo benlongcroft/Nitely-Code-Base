@@ -6,6 +6,8 @@ import sqlite3
 from geopy.distance import geodesic
 from Venue import venue
 from Timings import timings
+from scipy.spatial import distance
+
 
 def str_to_coordinates(str_coordinates):
     """
@@ -17,6 +19,13 @@ def str_to_coordinates(str_coordinates):
 
 
 def convert_to_datetime(start_time, end_time, date):
+    """
+    Converts string start_time, end_time and date into datetime objects
+    :param start_time: String start time
+    :param end_time: String end time
+    :param date: String date in format DDMMYYYY
+    :return: start_time and end_time with dates in datetime format
+    """
     try:
         _format_str = '%d%m%Y%H:%M'
         # should be in format DDMMYYYY
@@ -29,6 +38,7 @@ def convert_to_datetime(start_time, end_time, date):
 
     except Exception as e:
         print('Error when transferring into datetime object')
+        print('Probably invalid format for conversion')
         print(e)
 
 
@@ -46,7 +56,14 @@ def get_distance_between_coords(current_location, y_coordinates):
 
 
 class start_NITE:
+    """
+    start_NITE creates a new session from the arguments given on command line
+    """
     def __init__(self, kwargs):
+        """
+        Constructor converts kwargs to valid formats and connects to database
+        :param kwargs: command line arguments
+        """
         location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
@@ -70,8 +87,8 @@ class start_NITE:
                                               end_time)
         self.__user = user(self.__user_preferences, self.__user_account)
         self.db_obj = sqlite3.connect(
-            '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')  # connect to database
-        # TODO: move db to accessible location
+            '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
+        # connect to database
         self.cursor_obj = self.db_obj.cursor()
 
     def get_account(self):
@@ -85,7 +102,7 @@ class start_NITE:
 
     def get_nearby_venues(self):
         """
-        Uses user to get all venues which fit our users criteria using custom SQL
+        Uses user object to get all venues which fit our users criteria using custom SQL
         command.
 
         :return: list of venue objects that are valid for use
@@ -93,6 +110,7 @@ class start_NITE:
         location = self.__user.get_location
         radius = self.__user.get_location_distance
         magic_words = self.__user.get_magic_words
+        # TODO: Implement magic word functionality to filter results better
         venues = []
 
         self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
@@ -124,16 +142,31 @@ class start_NITE:
             for day in timing_data:
                 open[day[0]] = day[1]
                 close[day[0]] = day[2]
-
+            if venue_data[4] is None:
+                continue
             valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
                                           venue_data[3], venue_data[4], venue_data[5],
                                           venue_data[6], venue_data[7], timings(open, close)))
-
-        # TODO add the timings object to venue instantiation
         return valid_venue_objs
 
-    def get_similarity(self, venues):
-        pass
+    @staticmethod
+    def get_similarity(venues, vector):
+        """
+        Static method that finds the similarity between a vector and a list of venue objects
+        :param venues: a list of venue objects to check - see venue class :param vector: a numpy
+        vector of size 300 to evaluate against the list of venues :return: dictionary of length
+        venues containing the venue object (key) and a euclidean distance score
+        """
+        vector = vector.reshape(1, 300)
+        similarity = {}
+        for venue_obj in venues:
+            venue_vector = venue_obj.get_vector
+            venue_vector = venue_vector.reshape(1, 300)
+            # split the string vector and convert to
+            # numpy array of floats
+            cos = distance.euclidean(vector, venue_vector)
+            similarity[venue_obj] = cos
+        return similarity
 
     def create_packages(self, venues, venue_similarity):
         pass

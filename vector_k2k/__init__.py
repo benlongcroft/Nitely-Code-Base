@@ -16,7 +16,6 @@ class K2K:
     """
 
     def __init__(self, keywords, weightings):
-        print(keywords)
         self.__user_vector = self.convert_keywords_to_vectors(keywords, weightings)
         # gets user vector. Can take a while
         # depending on length of keywords list
