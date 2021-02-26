@@ -1,5 +1,7 @@
-
 class account:
+    """
+    account object stores the user account - will be extended for user db
+    """
     def __init__(self, name, telephone):
         self.__name = name
         self.__telephone = telephone
