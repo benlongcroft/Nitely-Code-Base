@@ -44,6 +44,10 @@ def cli():
                         help="String input of end time",
                         type=str)
 
+    parser.add_argument("--num_venues",
+                        help = "Number of venue the user wants to visit",
+                        type=int)
+
     parser.add_argument("--telephone",
                         help="Users telephone",
                         type=str)

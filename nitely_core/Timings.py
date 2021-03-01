@@ -1,3 +1,4 @@
+from Toolbox import convert_to_datetime
 class timings:
     """timings object can hold opening time and closing time for venue"""
     def __init__(self, start_times, end_times):
@@ -10,12 +11,11 @@ class timings:
         :param day: string in format MON, TUE, WED, THU, FRI, SAT or SUN
         :return: opening time and closing time as string
         """
-        if (len(day) == 3) and (day.upper() in self.__start_times.keys()):
-            open = self.__start_times[day]
-            close = self.__end_times[day]
-            return open, close
-        else:
-            return ValueError
+        open_t = self.__start_times[day]
+        close_t = self.__end_times[day]
+        return open_t, close_t
+
+
 
     @property
     def get_timings(self):

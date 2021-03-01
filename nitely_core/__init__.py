@@ -19,7 +19,7 @@ class start_NITE:
         Constructor converts kwargs to valid formats and connects to database
         :param kwargs: command line arguments
         """
-        location = str_to_coordinates(kwargs['location'])
+        users_location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
             location_distance = 49
@@ -30,13 +30,14 @@ class start_NITE:
         start_time, end_time = convert_to_datetime(kwargs['start_time'],
                                                    kwargs['end_time'],
                                                    kwargs['date'])
+        self.__date = kwargs['date']
         telephone = kwargs['telephone']
         user_name = kwargs['name']
-
+        self.__number_of_venues = kwargs["num_venues"]
         self.__user_account = account(user_name, telephone)
         # creates account object for user
         self.__user_preferences = preferences(keywords,
-                                              location,
+                                              users_location,
                                               location_distance,
                                               users_magic_words,
                                               start_time,
@@ -92,25 +93,27 @@ class start_NITE:
             self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
                                     (venue_id,))
             timing_data = [*self.cursor_obj.fetchall()]
-            open = {}
-            close = {}
+            open_times = {}
+            close_times = {}
             for day in timing_data:
-                open[day[0]] = day[1]
-                close[day[0]] = day[2]
+                open_times[day[0]] = day[1]
+                close_times[day[0]] = day[2]
             if venue_data[4] is None:
                 continue
             valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
                                           venue_data[3], venue_data[4], venue_data[5],
-                                          venue_data[6], venue_data[7], timings(open, close)))
+                                          venue_data[6], venue_data[7],
+                                          timings(open_times, close_times)))
         return valid_venue_objs
 
     @staticmethod
     def get_similarity(venues, vector):
         """
         Static method that finds the similarity between a vector and a list of venue objects
-        :param venues: a list of venue objects to check - see venue class :param vector: a numpy
-        vector of size 300 to evaluate against the list of venues :return: dictionary of length
-        venues containing the venue object (key) and a euclidean distance score
+        :param venues: a list of venue objects to check - see venue class
+        :param vector: a numpy vector of size 300 to evaluate against the list of venues
+        :return: dictionary of length venues containing the venue object (key)
+        and a euclidean distance score
         """
         vector = vector.reshape(1, 300)
         similarity = {}
@@ -123,20 +126,41 @@ class start_NITE:
             similarity[venue_obj] = cos
         return similarity
 
-    def create_packages(self, K2K, user_obj,
-                        num_venues, venue_similarity, start_venue):
+    def get_time_slot(self, venue_timings, package_timings):
+        print("IN TIME SLOT")
+        start_time = self.__user.get_start_time
+        end_time = self.__user.get_end_time
+        total_time = end_time - start_time
+        alpha = total_time/self.__number_of_venues
+        if package_timings == {}:
+            opening_time, closing_time = venue_timings.get_day(date_str_to_weekday(self.__date))
+
+    def create_packages(self, K2K, user_obj, venue_similarity, start_venue):
+        """
+        Creates a package from the user_obj given venue_similarity
+
+        :param K2K: The K2K object created for the user
+        :param user_obj: The users object
+        :param num_venues: The number of venues in the package
+        :param venue_similarity: result of get_similarity method
+        - dictionary of {venue_obj:similarity to vector}
+        :param start_venue: A venue to start at, if none is defined - will generate automatically
+        :return: a package object of the NITE
+        """
         package_venues = []
+        package_timings = {}
         if start_venue is None:
             start_venue = find_max_in_dict(venue_similarity)
-            # also apply pres here
         venue_to_add = start_venue
-        for venue_number in range(num_venues):
-            if venue_number == (num_venues - 1):
-                # if last venue, apply finale
-                # TODO: Apply intensity finale and pres
+        for venue_number in range(self.__number_of_venues):
+            print(venue_to_add.get_name)
+            print(venue_to_add.get_timings)
+            package_timings = self.get_time_slot(venue_to_add.get_timings, package_timings)
+            if venue_number == (self.__number_of_venues - 1):
+                # intensity
                 pass
             elif venue_number == 0:
-                # if first venue, apply pres
+                # intensity
                 pass
             package_venues.append(venue_to_add)
             vector = venue_to_add.get_vector
@@ -144,12 +168,13 @@ class start_NITE:
 
             composite_vector = K2K.composite_vector([user_vec, vector])
             location = venue_to_add.get_location
-            print(location)
 
             increase_radius = 0.2
             while increase_radius <= 2:
+                # Increase radius by 0.2 each time. CAP at 2 miles from location
                 new_venues = self.get_nearby_venues(location, radius=increase_radius)
                 if len(new_venues) >= 20:
+                    # This means there must be 20 venues nearby to choose from
                     # TODO: This value is stupid sometimes. Needs to be adjusted
                     break
                 increase_radius = increase_radius + 0.2
@@ -159,4 +184,4 @@ class start_NITE:
             similarity_scores = self.get_similarity(valid_venues, composite_vector)
             venue_to_add = find_max_in_dict(similarity_scores)
             # TODO: implement timings algo
-        return package(package_venues)
+        return package(package_venues, package_timings)

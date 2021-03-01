@@ -51,7 +51,7 @@ class venue:
 
     @property
     def get_timings(self):
-        return self.__timings.get_timings()
+        return self.__timings
 
     @property
     def get_vector(self):

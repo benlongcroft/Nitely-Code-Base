@@ -45,6 +45,12 @@ def convert_to_datetime(start_time, end_time, date):
         print(e)
 
 
+def date_str_to_weekday(date):
+    format_str = "%d%m%Y"
+    d = datetime.datetime.strptime(date, format_str)
+    return d.strftime("%a").upper()
+
+
 def get_distance_between_coords(current_location, y_coordinates):
     """
     Gets distance as crow flies between two addresses
