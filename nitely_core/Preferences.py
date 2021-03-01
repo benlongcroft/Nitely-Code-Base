@@ -1,3 +1,4 @@
+
 class preferences:
     """preferences object which holds the users preferences for a specific NITE - when paired with
     a account object it can create a user object via inheritance"""

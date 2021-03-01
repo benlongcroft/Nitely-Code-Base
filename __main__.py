@@ -17,7 +17,8 @@ def main(kwargs):
     user_vector = user_obj.get_user_vector(k2k_obj)
     venues = nite_obj.get_nearby_venues(user_obj.get_location, user_obj.get_location_distance)
     venue_similarity = nite_obj.get_similarity(venues, user_vector)
-    nite_obj.create_packages(k2k_obj, user_obj, num_venues, venue_similarity)
+    p = nite_obj.create_packages(k2k_obj, user_obj, num_venues, venue_similarity, None)
+    print(repr(p))
 
 
 if __name__ == '__main__':

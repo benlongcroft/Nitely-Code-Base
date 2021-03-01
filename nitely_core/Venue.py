@@ -1,5 +1,5 @@
 import numpy as np
-
+from Toolbox import str_to_coordinates
 
 class venue:
     """
@@ -25,7 +25,7 @@ class venue:
         self.__id = venue_id
         self.__name = name
         self.__description = description
-        self.__location = location
+        self.__location = str_to_coordinates(location)
         self.__venue_type = type_to_bin[venue_type.lower()] + str(restaurant) + str(club)
         # takes venue_type, restaurant and club arguments and creates a 5 bit binary code
         # denoting the venue type
@@ -85,6 +85,6 @@ class venue:
         return str(str(self.__id) + ' ' +
                    self.__name + ' ' +
                    self.__venue_type + ' ' +
-                   self.__location + ' ' +
+                   str(self.__location) + ' ' +
                    self.__description + ' ' +
                    str(self.__vector))

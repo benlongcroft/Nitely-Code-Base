@@ -1,69 +1,12 @@
 from Account import account
 from Preferences import preferences
 from User import user
-import datetime
 import sqlite3
-from geopy.distance import geodesic
 from Venue import venue
 from Timings import timings
 from Package import package
 from scipy.spatial import distance
-
-
-def find_max_in_dict(dictionary):
-    max_key = ''
-    max_value = 0
-    for key in dictionary.keys():
-        value = dictionary[key]
-        if value > max_value:
-            max_key = key
-    return max_key
-
-
-def str_to_coordinates(str_coordinates):
-    """
-    Converts comma separated coordinates to dictionary object of coordinates
-    :param str_coordinates: comma separated (no spaces) coordinates in str type
-    :return: dictionary {lat:[latitude], 'lng':[longitude]}
-    """
-    return {'lat': str_coordinates.split(",")[0], 'lng': str_coordinates.split(",")[1]}
-
-
-def convert_to_datetime(start_time, end_time, date):
-    """
-    Converts string start_time, end_time and date into datetime objects
-    :param start_time: String start time
-    :param end_time: String end time
-    :param date: String date in format DDMMYYYY
-    :return: start_time and end_time with dates in datetime format
-    """
-    try:
-        _format_str = '%d%m%Y%H:%M'
-        # should be in format DDMMYYYY
-        _date_str = date
-        start = datetime.datetime.strptime(_date_str + start_time,
-                                           _format_str)
-        end = datetime.datetime.strptime(_date_str + end_time, _format_str)
-        return start, end
-        # converts date and time into datetime object
-
-    except Exception as e:
-        print('Error when transferring into datetime object')
-        print('Probably invalid format for conversion')
-        print(e)
-
-
-def get_distance_between_coords(current_location, y_coordinates):
-    """
-    Gets distance as crow flies between two addresses
-
-    :param current_location: Users current location in coordinates
-    :param y_coordinates: location to travel to in coordinates
-    :return: Distance in miles between coordinates
-    """
-    # use geopy geodesic module to get distance in miles and return it to function call
-    return geodesic((y_coordinates['lat'], y_coordinates['lng']),
-                    (current_location['lat'], current_location['lng'])).miles
+from Toolbox import *
 
 
 class start_NITE:
@@ -126,14 +69,12 @@ class start_NITE:
         magic_words = self.__user.get_magic_words
         # TODO: Implement magic word functionality to filter results better
         venues = []
-
         self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
 
         for record in self.cursor_obj.fetchall():
             record = list(record)  # turn record from tuple to list
             venue_id = record[0]
-            record_coordinates = {'lat': record[-1].split(" ")[0],
-                                  'lng': record[-1].split(" ")[1]}
+            record_coordinates = str_to_coordinates(record[-1])
             # get coordinates and split them into a dictionary
 
             _distance = get_distance_between_coords(location, record_coordinates)
@@ -199,8 +140,11 @@ class start_NITE:
                 pass
             package_venues.append(venue_to_add)
             vector = venue_to_add.get_vector
-            composite_vector = K2K.composite_vector([user_obj.get_vector, vector])
+            user_vec = user_obj.get_user_vector(K2K)
+
+            composite_vector = K2K.composite_vector([user_vec, vector])
             location = venue_to_add.get_location
+            print(location)
 
             increase_radius = 0.2
             while increase_radius <= 2:
@@ -210,12 +154,9 @@ class start_NITE:
                     break
                 increase_radius = increase_radius + 0.2
 
-            valid_venues = []
-            for venue_obj in new_venues:
-                if venue_obj not in package_venues:
-                    valid_venues.append(venue_obj)
+            valid_venues = delete_duplicates(new_venues, package_venues)
 
             similarity_scores = self.get_similarity(valid_venues, composite_vector)
             venue_to_add = find_max_in_dict(similarity_scores)
             # TODO: implement timings algo
-        return package(venue_to_add)
+        return package(package_venues)
