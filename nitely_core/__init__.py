@@ -126,14 +126,29 @@ class start_NITE:
             similarity[venue_obj] = cos
         return similarity
 
-    def get_time_slot(self, venue_timings, package_timings):
+    def get_time_slot(self, new_venue, package_timings):
         print("IN TIME SLOT")
+        v_timings = new_venue.get_timings
         start_time = self.__user.get_start_time
         end_time = self.__user.get_end_time
         total_time = end_time - start_time
-        alpha = total_time/self.__number_of_venues
-        if package_timings == {}:
-            opening_time, closing_time = venue_timings.get_day(date_str_to_weekday(self.__date))
+        alpha = total_time / self.__number_of_venues
+        ideal_time = (start_time + alpha).time()
+        start_time = start_time.time()
+        if package_timings != {}:
+            top_time = start_time
+            for key in package_timings.keys():
+                value = package_timings[key]
+                if value > top_time:
+                    top_time = value
+            assert isinstance(top_time, object)
+            start_time = top_time
+        opening_time, closing_time = v_timings.get_day(date_str_to_weekday(self.__date))
+        opening_time = datetime.datetime.strptime(opening_time, "%H:%M").time()
+        closing_time = datetime.datetime.strptime(closing_time, "%H:%M").time()
+        if closing_time <= ideal_time and opening_time <= start_time:
+            package_timings[new_venue] = ideal_time
+        return package_timings
 
     def create_packages(self, K2K, user_obj, venue_similarity, start_venue):
         """
@@ -141,7 +156,6 @@ class start_NITE:
 
         :param K2K: The K2K object created for the user
         :param user_obj: The users object
-        :param num_venues: The number of venues in the package
         :param venue_similarity: result of get_similarity method
         - dictionary of {venue_obj:similarity to vector}
         :param start_venue: A venue to start at, if none is defined - will generate automatically
@@ -155,7 +169,8 @@ class start_NITE:
         for venue_number in range(self.__number_of_venues):
             print(venue_to_add.get_name)
             print(venue_to_add.get_timings)
-            package_timings = self.get_time_slot(venue_to_add.get_timings, package_timings)
+            print(package_timings)
+            package_timings = self.get_time_slot(venue_to_add, package_timings)
             if venue_number == (self.__number_of_venues - 1):
                 # intensity
                 pass

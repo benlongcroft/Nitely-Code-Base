@@ -36,6 +36,8 @@ def convert_to_datetime(start_time, end_time, date):
         start = datetime.datetime.strptime(_date_str + start_time,
                                            _format_str)
         end = datetime.datetime.strptime(_date_str + end_time, _format_str)
+        if start.time() > end.time():
+            end = end + datetime.timedelta(days=1)
         return start, end
         # converts date and time into datetime object
 

@@ -42,7 +42,7 @@ def create(descriptions, magic, normal):
     return club_vectors_total
 
 
-db = sqlite3.connect('/Users/benlongcroft/Documents/Nitely Project/NewDB/ExperimentalOrficDB.db')
+db = sqlite3.connect('/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
 cur = db.cursor()
 import pickle
 
@@ -53,10 +53,11 @@ for item in cur.fetchall():
     des.append(item[1])
     descriptions.append(list(set(des)))
 
-values = [(1, 0.9), (1, 0.8), (1, 0.7), (1, 0.6), (1, 0.5)]
-for x, y in values:
-    cvt = create(descriptions, x, y)
-    with open('club_vectors_' + str(x) + '-' + str(y) + '.txt', 'wb') as fh:
-        pickle.dump(cvt, fh)
+# values = [(1, 0.9), (1, 0.8), (1, 0.7), (1, 0.6), (1, 0.5)]
+# for x, y in values:
+cvt = create(descriptions, 1, 0.75)
+with open('club_vectors_not_normalised.txt', 'wb') as fh:
+    pickle.dump(cvt, fh)
+
 # TODO: Create a 'some of our favourites section' which are handpicked routes through newcastle
 #  - delegate to Hugo?

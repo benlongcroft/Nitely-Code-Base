@@ -19,7 +19,7 @@ class K2K:
         self.__user_vector = self.convert_keywords_to_vectors(keywords, weightings)
         # gets user vector. Can take a while
         # depending on length of keywords list
-        self.__user_vector = preprocessing.normalize(self.__user_vector)
+        # self.__user_vector = preprocessing.normalize(self.__user_vector)
         # normalise vector
 
     @property
@@ -37,10 +37,10 @@ class K2K:
         :param vectors: list of numpy vectors of size (1, 300)
         :return: normalised midpoint of vectors
         """
-        composite_vector = np.empty((1, 300))
+        composite_vector = np.array([0 for x in range(300)])
         for current_vector in vectors:
-            composite_vector = current_vector + composite_vector
-        return preprocessing.normalize(composite_vector / len(vectors))
+            composite_vector = np.add(current_vector, composite_vector)
+        return (composite_vector / len(vectors)).reshape(1, 300)
 
     @staticmethod
     def convert_keywords_to_vectors(keywords, weightings):

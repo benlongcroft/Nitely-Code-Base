@@ -217,4 +217,4 @@ def turn_to_vector(tree):
             # if it is the final child then ignore as has
             # already been weighted when processing its parent
             pass
-    return total_vector
+    return total_vector.reshape(1, 300)

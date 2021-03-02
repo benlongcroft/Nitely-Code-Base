@@ -9,7 +9,6 @@ def main(kwargs):
     :param kwargs: commandline input from cli argparser
     :return: NITE's as package objects
     """
-    num_venues = 3
     # TODO: change the above arguments so they are defined by user
     nite_obj = start_NITE(kwargs)
     user_obj = nite_obj.get_user()
@@ -17,7 +16,7 @@ def main(kwargs):
     user_vector = user_obj.get_user_vector(k2k_obj)
     venues = nite_obj.get_nearby_venues(user_obj.get_location, user_obj.get_location_distance)
     venue_similarity = nite_obj.get_similarity(venues, user_vector)
-    p = nite_obj.create_packages(k2k_obj, user_obj, num_venues, venue_similarity, None)
+    p = nite_obj.create_packages(k2k_obj, user_obj, venue_similarity, None)
     print(repr(p))
 
 
