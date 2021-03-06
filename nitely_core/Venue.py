@@ -87,4 +87,4 @@ class venue:
                    self.__venue_type + ' ' +
                    str(self.__location) + ' ' +
                    self.__description + ' ' +
-                   str(self.__vector))
+                   repr(self.__timings))

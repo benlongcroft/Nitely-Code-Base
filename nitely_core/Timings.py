@@ -1,6 +1,9 @@
 from Toolbox import convert_to_datetime
+
+
 class timings:
     """timings object can hold opening time and closing time for venue"""
+
     def __init__(self, start_times, end_times):
         self.__start_times = start_times
         self.__end_times = end_times
@@ -18,3 +21,6 @@ class timings:
     @property
     def get_timings(self):
         return self.__start_times, self.__end_times
+
+    def __repr__(self):
+        return str([[self.__start_times[i], self.__end_times[i]] for i in self.__start_times.keys()])
