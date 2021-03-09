@@ -124,14 +124,15 @@ class start_NITE:
             # numpy array of floats
             cos = distance.euclidean(vector, venue_vector)
             similarity[venue_obj] = cos
-        return similarity
+        return sort_dictionary(similarity)
 
     def get_time_slot(self, new_venue, package_timings):
-        print("IN TIME SLOT")
         v_timings = new_venue.get_timings
         # get venue timings
         start_time = self.__user.get_start_time
         end_time = self.__user.get_end_time
+        if start_time == 'CLOSED':
+            return False
         # get users start and end times
         total_time = (end_time - start_time)
         # find total time the user will spend out
@@ -151,17 +152,39 @@ class start_NITE:
         opening_time, closing_time = convert_to_datetime(opening_time, closing_time, self.__date)
         # opening_time = datetime.datetime.strptime(opening_time, "%H:%M")
         # closing_time = datetime.datetime.strptime(closing_time, "%H:%M")
-        print('NAME:', new_venue.get_name)
-        print('Ideal Time:', ideal_time)
-        print(opening_time, closing_time)
-        print('C>I', closing_time > ideal_time)
-        print('S<O', start_time > opening_time)
-        if closing_time > ideal_time and start_time > opening_time:
-            print(new_venue.get_name, 'GOT HERE')
+        if closing_time >= ideal_time and start_time >= opening_time:
             package_timings[new_venue] = ideal_time
         else:
             return False
         return package_timings
+
+    def find_next_venue(self, package_venues, vector, location, not_applicable):
+        increase_radius = 0.2
+        while increase_radius <= 2:
+            # Increase radius by 0.2 each time. CAP at 2 miles from location
+            new_venues = self.get_nearby_venues(location, radius=increase_radius)
+            if len(new_venues) >= 20:
+                # This means there must be 20 venues nearby to choose from
+                # TODO: This value is stupid sometimes. Needs to be adjusted
+                break
+            increase_radius = increase_radius + 0.2
+
+        valid_venues = delete_duplicates(new_venues, package_venues)
+        if not_applicable is not None:
+            valid_venues = delete_duplicates(new_venues, not_applicable)
+
+        similarity_scores = self.get_similarity(valid_venues, vector)
+        top_venues = get_head_of_dict(similarity_scores, 3)
+        venue_to_add = random.choice((list(top_venues.keys())))
+        return venue_to_add
+
+    def check_validity(self, venue_to_add, package_timings):
+        output = self.get_time_slot(venue_to_add, package_timings)
+        if not output:
+            return False
+        else:
+            return True
+        # TODO: Fixing below requires this to have intensity added
 
     def create_packages(self, K2K, user_obj, venue_similarity, start_venue):
         """
@@ -176,41 +199,27 @@ class start_NITE:
         """
         package_venues = []
         package_timings = {}
+        user_vec = user_obj.get_user_vector(K2K)
+        location = self.__user_preferences.get_location
         if start_venue is None:
-            start_venue = find_max_in_dict(venue_similarity)
+            top_venues = get_head_of_dict(venue_similarity, 3)
+            start_venue = random.choice(list(top_venues.keys()))
         venue_to_add = start_venue
         for venue_number in range(self.__number_of_venues):
-            output = self.get_time_slot(venue_to_add, package_timings)
-            if not output:
-                pass
-            else:
-                package_timings = output
-            if venue_number == (self.__number_of_venues - 1):
-                # intensity
-                pass
-            elif venue_number == 0:
-                # intensity
-                pass
+            not_applicable = []
+            print("VENUE NUMBER:", venue_number)
+            print("START VENUE:", venue_to_add.get_name)
+            while not self.check_validity(venue_to_add, package_timings):
+                not_applicable.append(venue_to_add)
+                venue_to_add = self.find_next_venue(package_venues, user_vec, location, not_applicable)
+                print("CHOSEN INSTEAD:", venue_to_add.get_name)
+                print("CURRENT DAY:", date_str_to_weekday(self.__date))
+                print("VENUE TIMES:", venue_to_add.get_timings)
             package_venues.append(venue_to_add)
+            print("ADDED", venue_to_add.get_name, "TO PACKAGE VENUES\n")
             vector = venue_to_add.get_vector
-            user_vec = user_obj.get_user_vector(K2K)
-
-            composite_vector = K2K.composite_vector([user_vec, vector])
+            user_vec = K2K.composite_vector([user_obj.get_user_vector(K2K), vector])
             location = venue_to_add.get_location
-
-            increase_radius = 0.2
-            while increase_radius <= 2:
-                # Increase radius by 0.2 each time. CAP at 2 miles from location
-                new_venues = self.get_nearby_venues(location, radius=increase_radius)
-                if len(new_venues) >= 20:
-                    # This means there must be 20 venues nearby to choose from
-                    # TODO: This value is stupid sometimes. Needs to be adjusted
-                    break
-                increase_radius = increase_radius + 0.2
-
-            valid_venues = delete_duplicates(new_venues, package_venues)
-
-            similarity_scores = self.get_similarity(valid_venues, composite_vector)
-            venue_to_add = find_max_in_dict(similarity_scores)
-            # TODO: implement timings algo
+            venue_to_add = self.find_next_venue(package_venues, user_vec, location, None)
+        print(package_venues)
         return package(package_venues, package_timings)

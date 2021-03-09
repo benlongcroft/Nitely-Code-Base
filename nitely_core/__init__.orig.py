@@ -287,6 +287,7 @@ class create_packages(get_venues):
             # uses location to search for nearby clubs. There must be more than 10 locations
             # within 2 miles we look for clubs within half a mile and increase the step by 0.2
             # if we cannot find enough clubs.
+
             for venue_id in package['venue_id']:
                 df = self.__remove_venue(df, venue_id)
             # removes venues already in the package from the database

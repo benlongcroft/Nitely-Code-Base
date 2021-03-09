@@ -1,5 +1,6 @@
 from geopy.distance import geodesic
 import datetime
+import random
 
 
 def find_max_in_dict(dictionary):
@@ -10,6 +11,22 @@ def find_max_in_dict(dictionary):
         if value > max_value:
             max_key = key
     return max_key
+
+
+def sort_dictionary(dict1):
+    sorted_dict = {}
+    sorted_keys = sorted(dict1, key=dict1.get, reverse=True)
+    for w in sorted_keys:
+        sorted_dict[w] = dict1[w]
+    return sorted_dict
+
+
+def get_head_of_dict(dictionary, length):
+    head = {}
+    for x in range(length):
+        key = list(dictionary.keys())[x]
+        head[key] = dictionary[key]
+    return head
 
 
 def str_to_coordinates(str_coordinates):
