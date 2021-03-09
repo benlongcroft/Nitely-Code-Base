@@ -91,3 +91,8 @@ def delete_duplicates(new_venues, used_venues):
             return_list.append(venue)
 
     return return_list
+
+
+def db_to_type(type, restaurant, club):
+    type_to_bin = {'pub': '000', 'bar': '001', 'club': '010', 'other': '011', 'live': '100'}
+    return type_to_bin[type.lower()] + str(restaurant) + str(club)

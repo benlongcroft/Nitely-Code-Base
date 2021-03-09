@@ -1,5 +1,5 @@
 import numpy as np
-from Toolbox import str_to_coordinates
+from Toolbox import str_to_coordinates, db_to_type
 
 class venue:
     """
@@ -21,12 +21,11 @@ class venue:
         :param vector: vector of venue from description - string
         :param timings: timings object for venue - contains opening and closing times
         """
-        type_to_bin = {'pub': '000', 'bar': '001', 'club': '010', 'other': '011', 'live': '100'}
         self.__id = venue_id
         self.__name = name
         self.__description = description
         self.__location = str_to_coordinates(location)
-        self.__venue_type = type_to_bin[venue_type.lower()] + str(restaurant) + str(club)
+        self.__venue_type = db_to_type(venue_type, restaurant, club)
         # takes venue_type, restaurant and club arguments and creates a 5 bit binary code
         # denoting the venue type
         self.__timings = timings
