@@ -194,7 +194,7 @@ db_obj = sqlite3.connect(
     '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
 cursor_obj = db_obj.cursor()
 
-pickle_off = open("/Users/benlongcroft/Documents/Nitely Project/Nitely/club_vectors_not_normalised.txt", "rb")
+pickle_off = open("/Users/benlongcroft/Documents/Nitely Project/Nitely/club_vectors_normalised_1.txt", "rb")
 #using 0.75-1
 vectors = pickle.load(pickle_off)
 cursor_obj.execute('''SELECT id FROM venue_info  WHERE description != "DO NOT USE"''')

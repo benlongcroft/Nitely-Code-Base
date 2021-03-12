@@ -51,12 +51,21 @@ descriptions = []
 for item in cur.fetchall():
     des = item[0].split(', ')
     des.append(item[1])
-    descriptions.append(list(set(des)))
+    words = []
+    for x in list(set(des)):
+        if x != '':
+            words.append(x)
+
+    descriptions.append(words)
 
 # values = [(1, 0.9), (1, 0.8), (1, 0.7), (1, 0.6), (1, 0.5)]
 # for x, y in values:
-cvt = create(descriptions, 1, 0.75)
-with open('club_vectors_not_normalised.txt', 'wb') as fh:
+
+f = open("/Users/benlongcroft/Documents/Nitely Project/Nitely/vector_k2k/transpositiontbl.pkl", "w")
+f.truncate()
+f.close()
+cvt = create(descriptions, 1, 1)
+with open('club_vectors_normalised_1.txt', 'wb') as fh:
     pickle.dump(cvt, fh)
 
 # TODO: Create a 'some of our favourites section' which are handpicked routes through newcastle

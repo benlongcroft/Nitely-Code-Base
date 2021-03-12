@@ -5,7 +5,7 @@ import sqlite3
 from Venue import venue
 from Timings import timings
 from Package import package
-from scipy.spatial import distance
+import random
 from Toolbox import *
 
 
@@ -62,12 +62,12 @@ class start_NITE:
 
     def get_nearby_venues(self, location, radius, types):
         """
-        Uses user object to get all venues which fit our users criteria using custom SQL
-        command.
-
-        :return: list of venue objects that are valid for use
+        Gets nearby venues to location by type
+        :param location: location of user
+        :param radius: total radius of distance user is willing to travel to next venue
+        :param types: types of venues to fetch
+        :return: list of Venue objects
         """
-        magic_words = self.__user.get_magic_words
         # TODO: Implement magic word functionality to filter results better
         venues = []
         self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
@@ -83,6 +83,7 @@ class start_NITE:
 
             if _distance <= radius:
                 venues.append(venue_id)
+            # quick distance check to filter out any too far out results
 
         valid_venue_objs = []
         for venue_id in venues:
@@ -101,6 +102,7 @@ class start_NITE:
             if venue_data[4] is None:
                 continue
             if db_to_type(venue_data[4], venue_data[5], venue_data[6]) in types or types == []:
+                # if type of venue is in types specified by param
                 valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
                                               venue_data[3], venue_data[4], venue_data[5],
                                               venue_data[6], venue_data[7],
@@ -108,22 +110,22 @@ class start_NITE:
         return valid_venue_objs
 
     @staticmethod
-    def get_similarity(venues, vector):
+    def get_similarity(venues, u_vector):
         """
         Static method that finds the similarity between a vector and a list of venue objects
         :param venues: a list of venue objects to check - see venue class
-        :param vector: a numpy vector of size 300 to evaluate against the list of venues
+        :param u_vector: a numpy vector of size 300 to evaluate against the list of venues
         :return: dictionary of length venues containing the venue object (key)
         and a euclidean distance score
         """
-        vector = vector.reshape(1, 300)
+        u_vector = u_vector.reshape(1, 300)
         similarity = {}
         for venue_obj in venues:
             venue_vector = venue_obj.get_vector
             venue_vector = venue_vector.reshape(1, 300)
             # split the string vector and convert to
             # numpy array of floats
-            cos = distance.euclidean(vector, venue_vector)
+            cos = np.linalg.norm((u_vector-venue_vector))
             similarity[venue_obj] = cos
         return sort_dictionary(similarity)
 
@@ -144,8 +146,8 @@ class start_NITE:
         alpha = (total_time / self.__number_of_venues)
         # Find average time at each venue
         if package_timings != {}:
-            # if there are no packages already, assign the
-            # opening time of the first venue as the start time
+            # if there are packages already, assign the
+            # leaving time of the first venue as the start time
             for key in package_timings.keys():
                 value = package_timings[key]
                 if value > start_time:
@@ -157,7 +159,7 @@ class start_NITE:
         opening_time, closing_time = v_timings.get_day(date_str_to_weekday(self.__date))
 
         if opening_time == 'CLOSED' or closing_time == 'CLOSED':
-            # check venue isn't closed first
+            # check venue isn't closed first, if so - return false
             return False
 
         opening_time, closing_time = convert_to_datetime(opening_time, closing_time, self.__date)
@@ -166,7 +168,7 @@ class start_NITE:
             # the opening time
             package_timings[new_venue] = ideal_time
         else:
-            # if not, return false
+            # if venue is not able to be visited due to opening/closing times, return false
             return False
         return package_timings
 
@@ -183,15 +185,18 @@ class start_NITE:
             types = ['00000', '00010', '00110',
                      '00100', '01100', '01101',
                      '01110', '01111', '10010']
+            # all possible types for first venue
         elif venue_number == self.__number_of_venues - 1:
             types = ['01001', '01011', '00101',
                      '00111', '10011', '10001',
                      '01101', '01111']
+            # all possible types for last venue
         else:
             types = ['00111', '00110', '00101', '00100',
                      '01011', '01010', '01001', '01000',
                      '01111', '01110', '01101', '01100',
                      '10011', '10010', '10001', '10000']
+            # all possible types for other venues
         increase_radius = 0.2
         while increase_radius <= 2:
             # Increase radius by 0.2 each time. CAP at 2 miles from location
@@ -204,35 +209,25 @@ class start_NITE:
             increase_radius = increase_radius + 0.2
 
         valid_venues = delete_duplicates(new_venues, not_applicable)
+        # deletes all not applicable venues (those already in package and those already checked)
 
         similarity_scores = self.get_similarity(valid_venues, vector)
+        # gets all venues ranked in similarity
 
         top_venues = get_head_of_dict(similarity_scores, 3)
-        venue_to_add = random.choice((list(top_venues.keys())))
+        # gets top three venues of correct type (from types param in get_nearby_venues)
+
+        venue_to_add = list(top_venues.keys())[0]
         # This just adds an element of randomness by selecting randomly one of the three best
         # venues
         return venue_to_add
 
-    def check_validity(self, venue_to_add, package_timings):
-        """
-        Checks the validity of a choice against various criteria
-        :param venue_to_add: The venue to be considered as a Venue object
-        :param package_timings: all venues timings in dict format
-        :return: True or False depending on validity
-        """
-        output = self.get_time_slot(venue_to_add, package_timings)
-        if not output:
-            return False
-        else:
-            return output
-        # TODO: Fixing below requires this to have intensity added
-
-    def create_packages(self, K2K, user_obj, venue_similarity, start_venue):
+    def create_packages(self, K2K, user_vec, venue_similarity, start_venue):
         """
         Creates a package from the user_obj given venue_similarity
 
         :param K2K: The K2K object created for the user
-        :param user_obj: The users object
+        :param user_vec: The users vector
         :param venue_similarity: result of get_similarity method
         - dictionary of {venue_obj:similarity to vector}
         :param start_venue: A venue to start at, if none is defined - will generate automatically
@@ -240,29 +235,50 @@ class start_NITE:
         """
         package_venues = {}
 
-        user_vec = user_obj.get_user_vector(K2K)
         location = self.__user_preferences.get_location
+        venue_to_add = None
         for venue_number in range(self.__number_of_venues):
             not_applicable = list(package_venues.keys())
-
+            # always define not applicable venues as venues that are already in the package
+            # this prevents repeating venues in the NITE
             if (start_venue is None) and (venue_number == 0):
+                # if a start venue is not defined by the user...
                 top_venues = get_head_of_dict(venue_similarity, 3)
+                # get top_venues and choose one at random
                 venue_to_add = random.choice(list(top_venues.keys()))
-            else:
-                venue_to_add = self.find_next_venue(not_applicable, user_vec, location, venue_number)
-                vector = venue_to_add.get_vector
-                user_vec = K2K.composite_vector([user_obj.get_user_vector(K2K), vector])
-                location = venue_to_add.get_location
-
-            while True:
-                output = self.check_validity(venue_to_add, package_venues)
+            elif (start_venue is not None) and (venue_number == 0):
+                # if start_venue is defined, add the start venue to package venues
+                output = self.get_time_slot(start_venue, package_venues)
                 if not output:
-                    not_applicable.append(venue_to_add)
-                    venue_to_add = self.find_next_venue(not_applicable, user_vec, location, venue_number)
+                    # if start venue is not open at desired time return this
+                    return "Start venue is invalid!"
                 else:
+                    # otherwise, its given a timeslot and added to package venues
                     package_venues = output
-                    break
-
+            else:
+                # if we are not on the first venue, find the next venue
+                venue_to_add = self.find_next_venue(not_applicable, user_vec,
+                                                    location, venue_number)
+                vector = venue_to_add.get_vector
+                user_vec = K2K.composite_vector([user_vec, vector])
+                # create composite vector of previous club and user_vector to ensure that
+                # the NITE 'flows' by making sure we choose similar clubs to the previous venue
+                # this is cumulative as user_vec never returns to its initial state defined
+                # by only keywords
+                location = venue_to_add.get_location
+            if venue_to_add is None:
+                print('Start venue defined by user')
+                continue
+            else:
+                while True:
+                    output = self.get_time_slot(venue_to_add, package_venues)
+                    # check if venue is open at given time
+                    if not output:
+                        not_applicable.append(venue_to_add)
+                        # if its not valid, add it to not_applicable and find a new venue
+                        venue_to_add = self.find_next_venue(not_applicable, user_vec, location, venue_number)
+                    else:
+                        package_venues = output
+                        break
         print(package_venues)
-        print(len(package_venues))
         return package(package_venues)

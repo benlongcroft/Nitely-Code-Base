@@ -1,5 +1,5 @@
 import numpy as np
-from Toolbox import str_to_coordinates, db_to_type
+from Toolbox import str_to_coordinates, db_to_type, str_to_vector
 
 class venue:
     """
@@ -29,7 +29,7 @@ class venue:
         # takes venue_type, restaurant and club arguments and creates a 5 bit binary code
         # denoting the venue type
         self.__timings = timings
-        self.__vector = self.__str_to_vector(vector)
+        self.__vector = str_to_vector(vector)
         # converts vector from string to np.matrix (1,300) object
 
     @property
@@ -59,22 +59,6 @@ class venue:
     @property
     def get_id(self):
         return self.__id
-
-    def __str_to_vector(self, vector_str):
-        """
-        turns string from DB to numpy matrix
-        :param vector_str: string of vector. Values space separated
-        :return: numpy matrix of (1, 300) of vector
-        """
-        vector_str = vector_str.split(' ')
-        vec = ''
-        for val in vector_str:
-            if val == '':
-                continue
-            else:
-                vec = vec + ' ' + val
-        # TODO: Fix this method because its shit
-        return np.array([float(x) for x in vec.split(' ')[1:]]).reshape(1, 300)
 
     def __repr__(self):
         """

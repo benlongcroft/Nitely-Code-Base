@@ -7,11 +7,12 @@ import spacy
 import numpy as np
 from sklearn import preprocessing
 
-nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
-
+# nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
+nlp = spacy.load('en_core_web_md')
 lexemes = []  # get lexemes from pickled file and load into lexemes
 pickle_off = open("./vector_k2k/lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
+print(temp)
 for v in temp:
     lexemes.append(nlp.vocab[v])
 pickle_off.close()
@@ -36,6 +37,24 @@ def get_related_words(word):
     if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
         del by_similarity[0]
     return by_similarity[:3]  # return three most similar words
+
+# def get_related_words(word):
+#     topn = 3
+#     print(word)
+#     word_str = str(word.lower())
+#     lexemes = [nlp.vocab[orth] for orth in nlp.vocab.vectors]
+#     word = nlp.vocab[word_str]
+#     print(lexemes)
+#     queries = [
+#         w for w in lexemes
+#         if w.is_lower == word.is_lower and np.count_nonzero(w.vector)
+#     ]
+#
+#     by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
+#     print(by_similarity)
+#     top_words = [[w.lower_, w.similarity(word)] for w in by_similarity[:topn + 1] if
+#             w.lower_ != word.lower_]
+#     return top_words
 
 
 # def LemmatiseProfile(Profile):
@@ -82,7 +101,7 @@ def convert_word_to_vector(word):
     :param word: string word
     :return: numpy matrix of size (1, 300) normalised
     """
-    return preprocessing.normalize(nlp.vocab[word].vector.reshape(1, 300))
+    return nlp.vocab[word].vector.reshape(1, 300)
     # normalise nlp word vector to shape 300
 
 
@@ -148,7 +167,7 @@ def tree_creation(tree, words_to_add, scores_to_add,
     # opens transpos file and gets table, also define list to add new words too
     for x, __ in enumerate(words_to_add):
         trans_pos_result = check_transposition_table(words_to_add[x], tbl)
-        # get usable words from transpos table if exists
+        # get usable words from transpos table if existsn
 
         if trans_pos_result is not None:
             # if transpos result exists, define usable words as the result
@@ -217,4 +236,4 @@ def turn_to_vector(tree):
             # if it is the final child then ignore as has
             # already been weighted when processing its parent
             pass
-    return total_vector.reshape(1, 300)
+    return preprocessing.normalize(total_vector.reshape(1, 300))
