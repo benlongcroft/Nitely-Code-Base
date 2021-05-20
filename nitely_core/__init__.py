@@ -70,8 +70,11 @@ class start_NITE:
         """
         # TODO: Implement magic word functionality to filter results better
         venues = []
-        self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
-
+        try:
+            self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
+        except sqlite3.OperationalError as e:
+            print(e)
+            print("Could not fetch - database error when looking for venues")
         for record in self.cursor_obj.fetchall():
             record = list(record)  # turn record from tuple to list
             venue_id = record[0]

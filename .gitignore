@@ -4,3 +4,6 @@ ClubData
 .git_ignore
 .DS_Store
 .DS_Store
+club_vectors_pkl
+Playground
+ClubDataDB.orig.db
