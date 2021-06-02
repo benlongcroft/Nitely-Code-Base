@@ -1,7 +1,7 @@
 from nitely_core.cli import cli
 from nitely_core import start_NITE
 from vector_k2k import K2K
-from eavvs_interface import connect
+from eavss_interface import connect
 
 class new_session:
     def __init__(self, kwargs):
@@ -22,10 +22,7 @@ class new_session:
         :return p: the packages for the user"""
         user_vector = self.user_obj.get_user_vector(self.k2k_obj)
 
-        # venues = self.nite_obj.get_nearby_venues(self.user_obj.get_location,
-        #                                          self.user_obj.get_location_distance, [])
-
-        venues = self.eavvs_obj.get_nearby_venues(self.user_obj.get_magic_words, self.user_obj.price_point)
+        venues = self.nite_obj.get_nearby_venues(self.eavvs_obj, self.user_obj.get_magic_words, self.user_obj.price_point)
 
         venue_similarity = self.nite_obj.get_similarity(venues, user_vector)
 
