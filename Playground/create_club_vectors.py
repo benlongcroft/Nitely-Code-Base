@@ -46,7 +46,7 @@ db = sqlite3.connect('/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES
 cur = db.cursor()
 import pickle
 
-cur.execute('''SELECT description, type FROM venue_info WHERE description != "DO NOT USE"''')
+cur.execute('''SELECT description, tag FROM venue_info WHERE description != "DO NOT USE"''')
 descriptions = []
 for item in cur.fetchall():
     des = item[0].split(', ')

@@ -12,7 +12,7 @@ import numpy as np
 
 def group(types, vectors):
     all_types = {'pub': '000', 'bar': '001', 'club': '010', 'other': '011', 'live': '100'}
-    # we convert the type to a 3 bit tag and append restaurant and club bits to the end
+    # we convert the tag to a 3 bit tag and append restaurant and club bits to the end
     validation_data = {}
     grouping = {}
     i=0
@@ -47,7 +47,7 @@ def main():
 main()
     # vectors = [x[0] for x in vectors]
     #
-    # command = '''SELECT name, type, restaurant, club FROM venue_info'''
+    # command = '''SELECT name, tag, restaurant, club FROM venue_info'''
     # cursor_obj.execute(command)
     # group_tags = group(cursor_obj.fetchall(), vectors)
     #

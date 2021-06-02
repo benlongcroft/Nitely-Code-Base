@@ -62,7 +62,7 @@ class start_NITE:
 
     def get_nearby_venues(self, location, radius, types):
         """
-        Gets nearby venues to location by type
+        Gets nearby venues to location by tag
         :param location: location of user
         :param radius: total radius of distance user is willing to travel to next venue
         :param types: types of venues to fetch
@@ -91,7 +91,7 @@ class start_NITE:
         valid_venue_objs = []
         for venue_id in venues:
             venue_id = str(venue_id)
-            self.cursor_obj.execute('''SELECT id, name, description, location, type, restaurant, 
+            self.cursor_obj.execute('''SELECT id, name, description, location, tag, restaurant, 
                                         club, vector FROM venue_info WHERE id = ?''', (venue_id,))
             venue_data = [*(self.cursor_obj.fetchall()[0])]
             self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
@@ -105,7 +105,7 @@ class start_NITE:
             if venue_data[4] is None:
                 continue
             if db_to_type(venue_data[4], venue_data[5], venue_data[6]) in types or types == []:
-                # if type of venue is in types specified by param
+                # if tag of venue is in types specified by param
                 valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
                                               venue_data[3], venue_data[4], venue_data[5],
                                               venue_data[6], venue_data[7],
@@ -218,7 +218,7 @@ class start_NITE:
         # gets all venues ranked in similarity
 
         top_venues = get_head_of_dict(similarity_scores, 3)
-        # gets top three venues of correct type (from types param in get_nearby_venues)
+        # gets top three venues of correct tag (from types param in get_nearby_venues)
 
         venue_to_add = list(top_venues.keys())[0]
         # This just adds an element of randomness by selecting randomly one of the three best

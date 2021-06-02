@@ -51,7 +51,7 @@ def get_head_of_dict(dictionary, length):
 def str_to_coordinates(str_coordinates):
     """
     Converts comma separated coordinates to dictionary object of coordinates
-    :param str_coordinates: comma separated (no spaces) coordinates in str type
+    :param str_coordinates: comma separated (no spaces) coordinates in str tag
     :return: dictionary {lat:[latitude], 'lng':[longitude]}
     """
     return {'lat': str_coordinates.split(" ")[0], 'lng': str_coordinates.split(" ")[1]}
@@ -125,11 +125,11 @@ def delete_duplicates(all_venues, venues_to_delete):
 
 def db_to_type(type, restaurant, club):
     """
-    Turns type, restaurant and club attributes into 5 bit code to identify categories of venues
-    :param type: type of venue string
+    Turns tag, restaurant and club attributes into 5 bit code to identify categories of venues
+    :param type: tag of venue string
     :param restaurant: boolean value as to whether the venue is a restaurant or not
     :param club: boolean value as to whether the venue is a club or not
-    :return: 5 bit code of type of venue
+    :return: 5 bit code of tag of venue
     """
     type_to_bin = {'pub': '000', 'bar': '001', 'club': '010', 'other': '011', 'live': '100'}
     return type_to_bin[type.lower()] + str(restaurant) + str(club)

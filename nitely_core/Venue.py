@@ -15,7 +15,7 @@ class venue:
         :param name: the name of the venue - string
         :param description: the description of the venue which denotes it vector - string
         :param location: the location of the venue - coordinates
-        :param venue_type: the type of venue (see type_to_bin) - string
+        :param venue_type: the tag of venue (see type_to_bin) - string
         :param restaurant: whether the venue is a restaurant or not - boolean value (int)
         :param club: whether the venue is a club or not - boolean value (int)
         :param vector: vector of venue from description - string
@@ -27,7 +27,7 @@ class venue:
         self.__location = str_to_coordinates(location)
         self.__venue_type = db_to_type(venue_type, restaurant, club)
         # takes venue_type, restaurant and club arguments and creates a 5 bit binary code
-        # denoting the venue type
+        # denoting the venue tag
         self.__timings = timings
         self.__vector = str_to_vector(vector)
         # converts vector from string to np.matrix (1,300) object

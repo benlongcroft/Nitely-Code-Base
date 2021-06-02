@@ -11,3 +11,5 @@ spacy~=2.3.0
 spacy-lookups-data
 scikit-learn~=0.23.2
 pytest
+pandas
+fsspec
