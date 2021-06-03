@@ -64,17 +64,20 @@ class start_NITE:
     @staticmethod
     def walk_happiness_model(distance, speed=2.5):
         """Calculates walk happiness model and returns normalised score"""
-        x = ((-(distance / speed) + 20) / 9)
+        mpm = (60*distance) / speed
+        # this assumes speed in miles per hour but converts to miles per minute...
+        x = (21-mpm)
+        # it also caps all travel at 21 minutes max...
+        # changing the speed will allow for longer distances i.e by uber
 
-        result = math.pow(x, 2.9) / 10
-        # this uses a model which caps travel at roughly 15 minutes
-        return result
+        result = (math.pow(x, 2.9))
+        return (0.00170882*result)/10
 
     def get_nearby_venues(self, eavss_obj, magic_words, price_point):
         venues = []
         appeal = []
         df = eavss_obj.google_api(magic_words, None, price_point)
-        df = df.head(10)
+        df = df.head(15)
         geo = df['geometry']
         for location in geo:
             venue_location = location['location']
@@ -85,7 +88,7 @@ class start_NITE:
             location = row['geometry']
             location = location['location']
             time_data = eavss_obj.get_timings_from_api(row['place_id'])
-            if time_data == 0:
+            if time_data == 0 or row['distance_appeal'] < 0.001:
                 continue
             opening, closing = api_to_timings(time_data['periods'])
             venues.append(venue(row['place_id'], row['name'], location, row['types'],

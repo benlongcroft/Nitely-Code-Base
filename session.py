@@ -27,7 +27,7 @@ class new_session:
 
         venues = self.nite_obj.get_nearby_venues(self.eavvs_obj, self.magic_words,
                                                  self.price_point)
-        print(venues)
+        print(repr(venues))
 
         # venue_similarity = self.nite_obj.get_similarity(venues, user_vector)
         #

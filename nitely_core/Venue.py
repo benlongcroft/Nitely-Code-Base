@@ -65,7 +65,8 @@ class venue:
         """
         return str(str(self.__id) + ' ' +
                    self.__name + ' ' +
-                   self.__venue_type + ' ' +
                    str(self.__location) + ' ' +
-                   self.__description + ' ' +
+                   str(self.__distance_appeal) + ' ' +
+                   str(self.__price_level) + ' ' +
+                   str(self.__user_rating) + ' ' +
                    repr(self.__timings))
