@@ -10,9 +10,6 @@ class new_session:
         :param kwargs: commandline input from cli argparser (for now)
         """
 
-        self.start_venue = None
-        self.price_point = None
-        self.magic_words = 'bar'
         # TODO: change the above arguments so they are defined by user
         self.nite_obj = start_NITE(kwargs)
         self.user_obj = self.nite_obj.get_user()
@@ -25,8 +22,8 @@ class new_session:
         :return p: the packages for the user"""
         user_vector = self.user_obj.get_user_vector(self.k2k_obj)
 
-        venues = self.nite_obj.get_nearby_venues(self.eavvs_obj, self.magic_words,
-                                                 self.price_point)
+        venues = self.nite_obj.get_nearby_venues(self.eavvs_obj, self.user_obj.get_order_preference[0],
+                                                 self.user_obj.get_price_point)
         print(repr(venues))
 
         # venue_similarity = self.nite_obj.get_similarity(venues, user_vector)

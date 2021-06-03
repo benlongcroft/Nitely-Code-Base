@@ -27,20 +27,23 @@ class start_NITE:
         else:
             location_distance = kwargs['location_distance']
         keywords = kwargs['keywords']
-        users_magic_words = kwargs['magic_words']
+        order_preferences = kwargs['order_preference']
         start_time, end_time = convert_to_datetime(kwargs['start_time'],
                                                    kwargs['end_time'],
                                                    kwargs['date'])
         self.__date = kwargs['date']
         telephone = kwargs['telephone']
         user_name = kwargs['name']
+        price_point = kwargs['price_point']
+
         self.__number_of_venues = kwargs["num_venues"]
         self.__user_account = account(user_name, telephone)
         # creates account object for user
         self.__user_preferences = preferences(keywords,
                                               users_location,
                                               location_distance,
-                                              users_magic_words,
+                                              order_preferences,
+                                              price_point,
                                               start_time,
                                               end_time)
         # creates preferences object for user
