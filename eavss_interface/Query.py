@@ -5,12 +5,12 @@ class query:
         self.longitude = location['lng']
         self.latitude = location['lat']
         self.__key = key
-        self.price = str(price)
+        self.price = price
         self.tag = tag
-        self.opennow = str(opennow).lower()
+        self.opennow = opennow
 
     def get_query(self):
-        query = self.__base + "location="+self.longitude+","+self.latitude
+        query = self.__base + "location="+self.latitude+","+self.longitude
         if self.price is not None:
             query = query + "&price="+self.price
 

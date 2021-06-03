@@ -7,6 +7,7 @@ from Timings import timings
 from Package import package
 import random
 from Toolbox import *
+import math
 
 
 class start_NITE:
@@ -60,57 +61,36 @@ class start_NITE:
     def get_user(self):
         return self.__user
 
-    def get_nearby_venues(self, location, radius, types):
-        """
-        Gets nearby venues to location by tag
-        :param location: location of user
-        :param radius: total radius of distance user is willing to travel to next venue
-        :param types: types of venues to fetch
-        :return: list of Venue objects
-        """
-        # TODO: Implement magic word functionality to filter results better
+    @staticmethod
+    def walk_happiness_model(distance, speed=2.5):
+        """Calculates walk happiness model and returns normalised score"""
+        x = ((-(distance / speed) + 20) / 9)
+
+        result = math.pow(x, 2.9) / 10
+        # this uses a model which caps travel at roughly 15 minutes
+        return result
+
+    def get_nearby_venues(self, eavss_obj, magic_words, price_point):
         venues = []
-        try:
-            self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
-        except sqlite3.OperationalError as e:
-            print(e)
-            print("Could not fetch - database error when looking for venues")
-        for record in self.cursor_obj.fetchall():
-            record = list(record)  # turn record from tuple to list
-            venue_id = record[0]
-            record_coordinates = str_to_coordinates(record[-1])
-            # get coordinates and split them into a dictionary
-
-            _distance = get_distance_between_coords(location, record_coordinates)
-            # get distance between address and venues
-
-            if _distance <= radius:
-                venues.append(venue_id)
-            # quick distance check to filter out any too far out results
-
-        valid_venue_objs = []
-        for venue_id in venues:
-            venue_id = str(venue_id)
-            self.cursor_obj.execute('''SELECT id, name, description, location, tag, restaurant, 
-                                        club, vector FROM venue_info WHERE id = ?''', (venue_id,))
-            venue_data = [*(self.cursor_obj.fetchall()[0])]
-            self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
-                                    (venue_id,))
-            timing_data = [*self.cursor_obj.fetchall()]
-            open_times = {}
-            close_times = {}
-            for day in timing_data:
-                open_times[day[0]] = day[1]
-                close_times[day[0]] = day[2]
-            if venue_data[4] is None:
+        appeal = []
+        df = eavss_obj.google_api(magic_words, None, price_point)
+        df = df.head(10)
+        geo = df['geometry']
+        for location in geo:
+            venue_location = location['location']
+            distance = get_distance_between_coords(eavss_obj.location, venue_location)
+            appeal.append(self.walk_happiness_model(distance))
+        df['distance_appeal'] = appeal
+        for index, row in df.iterrows():
+            location = row['geometry']
+            location = location['location']
+            time_data = eavss_obj.get_timings_from_api(row['place_id'])
+            if time_data == 0:
                 continue
-            if db_to_type(venue_data[4], venue_data[5], venue_data[6]) in types or types == []:
-                # if tag of venue is in types specified by param
-                valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
-                                              venue_data[3], venue_data[4], venue_data[5],
-                                              venue_data[6], venue_data[7],
-                                              timings(open_times, close_times)))
-        return valid_venue_objs
+            opening, closing = api_to_timings(time_data['periods'])
+            venues.append(venue(row['place_id'], row['name'], location, row['types'],
+                                row['distance_appeal'], timings(opening, closing), row['price_level'], row['rating']))
+        return venues
 
     @staticmethod
     def get_similarity(venues, u_vector):
@@ -128,7 +108,7 @@ class start_NITE:
             venue_vector = venue_vector.reshape(1, 300)
             # split the string vector and convert to
             # numpy array of floats
-            cos = np.linalg.norm((u_vector-venue_vector))
+            cos = np.linalg.norm((u_vector - venue_vector))
             similarity[venue_obj] = cos
         return sort_dictionary(similarity)
 
@@ -279,7 +259,8 @@ class start_NITE:
                     if not output:
                         not_applicable.append(venue_to_add)
                         # if its not valid, add it to not_applicable and find a new venue
-                        venue_to_add = self.find_next_venue(not_applicable, user_vec, location, venue_number)
+                        venue_to_add = self.find_next_venue(not_applicable, user_vec, location,
+                                                            venue_number)
                     else:
                         package_venues = output
                         break
