@@ -1,3 +1,5 @@
+import sys
+
 from Account import account
 from Preferences import preferences
 from User import user
@@ -67,35 +69,70 @@ class start_NITE:
     @staticmethod
     def walk_happiness_model(distance, speed=2.5):
         """Calculates walk happiness model and returns normalised score"""
-        mpm = (60*distance) / speed
+        mpm = (60 * distance) / speed
         # this assumes speed in miles per hour but converts to miles per minute...
-        x = (21-mpm)
+        x = (21 - mpm)
         # it also caps all travel at 21 minutes max...
         # changing the speed will allow for longer distances i.e by uber
 
         result = (math.pow(x, 2.9))
-        return (0.00170882*result)/10
+        return (0.00170882 * result) / 10
 
-    def get_nearby_venues(self, eavss_obj, magic_words, price_point):
+    def get_nearby_venues(self, eavss_obj, loc):
+        """
+        Uses Google Places API to get nearby venues based on user preferences
+        :param eavss_obj: EAVSS interface module
+        :param loc: The location to search nearby (coordinates dictionary)
+        :return: a list of venue objects without vectors
+        """
         venues = []
         appeal = []
-        df = eavss_obj.google_api(magic_words, None, price_point)
+        order_preference = self.__user_preferences.get_order_preference
+        price_point = self.__user_preferences.get_price_point
+
+        df = eavss_obj.google_api(loc, order_preference, None, price_point)
+        # Get all nearby venues from google api based on users location
+
+        if df is None:
+            print("Session could not be completed for Places API error")
+            sys.exit(1)
+
         df = df.head(15)
+        # only keep the top 15 results, assumes that half will be too far away
+        # 15 is ample to choose from initially.
         geo = df['geometry']
+
         for location in geo:
             venue_location = location['location']
             distance = get_distance_between_coords(eavss_obj.location, venue_location)
+            # calculate distance between users location and venue
             appeal.append(self.walk_happiness_model(distance))
+            # apply distance appeal factor
+
         df['distance_appeal'] = appeal
+
         for index, row in df.iterrows():
             location = row['geometry']
             location = location['location']
             time_data = eavss_obj.get_timings_from_api(row['place_id'])
-            if time_data == 0 or row['distance_appeal'] < 0.001:
+            # get opening hours data for each venue
+
+            if time_data == 0:
+                print(row['name'] + " does not have opening hours listed")
+                print("Skipping...\n")
                 continue
+            elif row['distance_appeal'] < 0.001:
+                if len(venues) > 6:
+                    print('Desperate mode activated -> ignoring user preferences!')
+                    print("Adding...\n")
+                else:
+                    print(row['name'] + " is too far away by this method of transport")
+                    print("Skipping...\n")
+
             opening, closing = api_to_timings(time_data['periods'])
             venues.append(venue(row['place_id'], row['name'], location, row['types'],
-                                row['distance_appeal'], timings(opening, closing), row['price_level'], row['rating']))
+                                row['distance_appeal'], timings(opening, closing),
+                                row['price_level'], row['rating']))
         return venues
 
     @staticmethod
