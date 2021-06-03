@@ -1,6 +1,3 @@
-from Toolbox import convert_to_datetime
-
-
 class timings:
     """timings object can hold opening time and closing time for venue"""
 

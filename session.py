@@ -28,15 +28,13 @@ class new_session:
 
         # venue_similarity = self.nite_obj.get_similarity(venues, user_vector)
         #
-        # # EAVVS object will have to be passed onto create packages so it can use get nearby venues
+        # EAVVS object will have to be passed onto create packages so it can use get nearby venues
         # p = self.nite_obj.create_packages(self.k2k_obj, user_vector, venue_similarity,
         #                                   self.start_venue)
         # return p
 
-# TODO: magic words now denote tag in an order for the night
-# TODO: add price_point user option to USER
+
 # TODO: add new distance happiness to K2K similarity to get_similarity
 # TODO: implement access to venue vectors from EAVVS crawler (may be separately networked)
-# TODO: Magic words i.e tags need to be specified when fetching nearby venues - currently fucked
 # TODO: Alter create packages to use new venue object
 packages = new_session(cli())

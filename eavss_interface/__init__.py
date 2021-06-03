@@ -1,22 +1,31 @@
 import requests
 import pandas as pd
 import Query
+from google.cloud import error_reporting
 
 class connect:
     def __init__(self, location):
         self.__key = 'AIzaSyARK-xnPLJLPKgzz1Vsu9T-AYh2QI5wvZg'
         self.location = location
 
+    @staticmethod
+    def __report_manual_error(error_message):
+        client = error_reporting.Client()
+        client.report(error_message)
+
     def __make_request(self, query):
         r = requests.get(query)
         if r.status_code == 200:
-            return r.json()
+            return r
         else:
             print('Cannot make request -- retrying')
-            d, status_code = self.get_response(query)
-            if status_code != 200:
-                print('Could not connect')
-                raise ConnectionError
+            d = self.__make_request(query)
+            if d.status_code != 200:
+                error_string = "Could not make request, " \
+                               "status code: "+d.status_code+" Reason: "+d.reason
+                print(error_string)
+                print("Reporting error through Google cloud")
+                self.__report_manual_error(error_string)
             else:
                 return d
 
