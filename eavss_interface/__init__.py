@@ -32,7 +32,7 @@ class connect:
         """
         r = requests.get(query)
         if r.status_code == 200:
-            return r
+            return r.json()
         else:
             print('Cannot make request -- retrying')
             d = self.__make_request(query)
@@ -44,7 +44,7 @@ class connect:
                 self.__report_manual_error(error_string)
                 return None
             else:
-                return d
+                return d.json()
 
     def google_api(self, location, tag, open_now, price):
         """

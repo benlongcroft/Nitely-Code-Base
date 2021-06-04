@@ -62,5 +62,5 @@ def cli():
 
     args = parser.parse_args()
     args = vars(args)
-    print(args)
+    print("Got all user preferences\n")
     return args

@@ -11,10 +11,17 @@ class new_session:
         """
 
         # TODO: change the above arguments so they are defined by user
+        print('------------------------------------------------------')
+        print('|  NEW SESSION CREATED -> STARTING SET UP TASKS...   |')
+        print('------------------------------------------------------')
         self.nite_obj = start_NITE(kwargs)
         self.user_obj = self.nite_obj.get_user()
         self.k2k_obj = K2K(self.user_obj.get_keywords, self.user_obj.get_weightings)
         self.eavvs_obj = connect()
+        print('------------------------------------------------------')
+        print("|                SET-UP TASKS COMPLETE               |")
+        print('------------------------------------------------------')
+        print("\n")
 
     def build(self):
         """builds the packages in the new session

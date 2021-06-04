@@ -22,6 +22,7 @@ class start_NITE:
         Constructor converts kwargs to valid formats and connects to database
         :param kwargs: command line arguments
         """
+        print("Getting user details")
         users_location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
@@ -52,10 +53,12 @@ class start_NITE:
         self.__user = user(self.__user_preferences, self.__user_account)
         # passes account and preferences object to user object - user object will inherit all
         # methods and attributes
+        print("User validated successfully...\nAttempting to connect to database")
         self.db_obj = sqlite3.connect(
             '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
         # connect to database
         self.cursor_obj = self.db_obj.cursor()
+        print("Database connection successful")
 
     def get_account(self):
         return self.__user_account
@@ -90,8 +93,9 @@ class start_NITE:
         order_preference = self.__user_preferences.get_order_preference
         price_point = self.__user_preferences.get_price_point
 
-        df = eavss_obj.google_api(loc, order_preference, None, price_point)
+        df = eavss_obj.google_api(loc, order_preference[0], None, price_point)
         # Get all nearby venues from google api based on users location
+        # user order_preference[0] as first venue type of NITE
 
         if df is None:
             print("Session could not be completed for Places API error")
@@ -104,7 +108,7 @@ class start_NITE:
 
         for location in geo:
             venue_location = location['location']
-            distance = get_distance_between_coords(eavss_obj.location, venue_location)
+            distance = get_distance_between_coords(loc, venue_location)
             # calculate distance between users location and venue
             appeal.append(self.walk_happiness_model(distance))
             # apply distance appeal factor

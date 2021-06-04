@@ -8,14 +8,16 @@ import numpy as np
 from sklearn import preprocessing
 
 # nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
+print('Loading Spacy Library')
 nlp = spacy.load('en_core_web_md')
 lexemes = []  # get lexemes from pickled file and load into lexemes
 pickle_off = open("./vector_k2k/lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
-print(temp)
+print("Loading "+str(len(temp))+" lexemes")
 for v in temp:
     lexemes.append(nlp.vocab[v])
 pickle_off.close()
+print("Completed synthesising the English language")
 
 
 # TODO: Work out the ideal .prob value to use and streamline this function
@@ -28,11 +30,13 @@ def get_related_words(word):
     :return: list of 3 most similar words with their similarity via spacy to origin word
     """
     word = nlp.vocab[word]  # get nlp vocab object for word
-    _queries = []
-    for _vocab_obj in lexemes:
-        if _vocab_obj.is_lower == word.is_lower:
-            _queries.append(_vocab_obj)
-    by_similarity = [[x.text, x.similarity(word)] for x in _queries]  # find similarity
+    queries = []
+    for vocab_obj in lexemes:
+        if vocab_obj.is_lower == word.is_lower:
+            queries.append(vocab_obj)
+    if len(queries) == 0:
+        print("WARNING: Could not find any words which match!")
+    by_similarity = [[x.text, x.similarity(word)] for x in queries]  # find similarity
     by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True)  # sort similarity
     if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
         del by_similarity[0]
@@ -160,11 +164,14 @@ def tree_creation(tree, words_to_add, scores_to_add,
     transposition_file_obj = open(transposition_file_path, 'rb')
     try:
         tbl = pickle.load(transposition_file_obj)
+        print('Loaded transposition table')
     except EOFError:
         tbl = []
+        print("Transposition table is empty!")
     transposition_file_obj.close()
     words_for_transpos = []
     # opens transpos file and gets table, also define list to add new words too
+    print("Beginning tree construction")
     for x, __ in enumerate(words_to_add):
         trans_pos_result = check_transposition_table(words_to_add[x], tbl)
         # get usable words from transpos table if existsn
@@ -202,6 +209,7 @@ def tree_creation(tree, words_to_add, scores_to_add,
     if level == level_max:  # refers to number of middle layers, if a complete...
         for y in next_gen_words:  # add the final words as final leaves
             tree[y] = [next_gen_scores[next_gen_words.index(y)]]
+        print("K2K Lexemes tree constructed successfully")
         return tree  # finish
 
     else:
@@ -221,6 +229,7 @@ def turn_to_vector(tree):
     :param tree: Users tree as defined above
     :return: numpy matrix of (1,300) which is the users vector
     """
+    print("Starting vectoring process")
     total_vector = np.array([0 for x in range(300)])  # create blank vector
     for x in list(tree.keys()):  # go through every node
         parent = tree[x]  # get parents value
@@ -236,4 +245,5 @@ def turn_to_vector(tree):
             # if it is the final child then ignore as has
             # already been weighted when processing its parent
             pass
+    print("Vectoring process completed")
     return preprocessing.normalize(total_vector.reshape(1, 300))
