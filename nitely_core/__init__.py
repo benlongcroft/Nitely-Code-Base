@@ -55,7 +55,7 @@ class start_NITE:
         # methods and attributes
         print("User validated successfully...\nAttempting to connect to database")
         self.db_obj = sqlite3.connect(
-            '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
+            '/Users/benlongcroft/Documents/Nitely Project/Nitely/FINAL_DB')
         # connect to database
         self.cursor_obj = self.db_obj.cursor()
         print("Database connection successful")
@@ -102,6 +102,19 @@ class start_NITE:
             sys.exit(1)
 
         df = df.head(15)
+        # The below code simply adds the name, place_id and address to the venues db for eavss
+        # and to reduce google costs if the venue is not already in there.
+        for index, row in df.iterrows():
+            name = row['name']
+            self.cursor_obj.execute("SELECT venue_id FROM venues WHERE name = ?", (name,))
+            objs = self.cursor_obj.fetchall()
+            if len(objs) == 0:
+                place_id = row['place_id']
+                address = row['vicinity']
+                self.cursor_obj.execute("INSERT INTO venues(name, address, place_id) VALUES(?, ?, ?)", (name, address, place_id))
+                self.db_obj.commit()
+
+
         # only keep the top 15 results, assumes that half will be too far away
         # 15 is ample to choose from initially.
         geo = df['geometry']
