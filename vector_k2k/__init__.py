@@ -3,11 +3,11 @@ Creates K2K class and calls essential functions to act on vectors to establish s
 vectors should be pre-prepared. See NiteV1 for script to do so
 
 """
-from scipy.spatial import distance
 import numpy as np
+from scipy.spatial import distance
 from sklearn import preprocessing
+
 from .create_vector import tree_creation, turn_to_vector
-from sklearn import preprocessing
 
 
 class K2K:
@@ -52,10 +52,11 @@ class K2K:
         :param weightings: weightings of keywords
         :return: vector of keywords and weightings
         """
+        print("Constructing user vector...")
         return turn_to_vector(tree_creation({},
                                             keywords,
                                             weightings,
-                                            0, 1, [],
+                                            0, 0, [],
                                             './vector_k2k/transpositiontbl.pkl'))
 
     def get_closest_vectors(self, valid_venues_df, user_vector):

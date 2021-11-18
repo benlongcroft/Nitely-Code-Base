@@ -1,12 +1,14 @@
+import sys
+
 from Account import account
 from Preferences import preferences
 from User import user
-import sqlite3
 from Venue import venue
 from Timings import timings
 from Package import package
 import random
 from Toolbox import *
+import math
 
 
 class start_NITE:
@@ -14,11 +16,12 @@ class start_NITE:
     start_NITE creates a new session from the arguments given on command line
     """
 
-    def __init__(self, kwargs):
+    def __init__(self, kwargs, db_obj):
         """
         Constructor converts kwargs to valid formats and connects to database
         :param kwargs: command line arguments
         """
+        print("Getting user details")
         users_location = str_to_coordinates(kwargs['location'])
         if kwargs['location_distance'] > 50:
             print("Distance is too far to accurately represent club_data")
@@ -26,30 +29,33 @@ class start_NITE:
         else:
             location_distance = kwargs['location_distance']
         keywords = kwargs['keywords']
-        users_magic_words = kwargs['magic_words']
+        order_preferences = kwargs['order_preference']
         start_time, end_time = convert_to_datetime(kwargs['start_time'],
                                                    kwargs['end_time'],
                                                    kwargs['date'])
         self.__date = kwargs['date']
         telephone = kwargs['telephone']
         user_name = kwargs['name']
+        price_point = kwargs['price_point']
+
         self.__number_of_venues = kwargs["num_venues"]
         self.__user_account = account(user_name, telephone)
         # creates account object for user
         self.__user_preferences = preferences(keywords,
                                               users_location,
                                               location_distance,
-                                              users_magic_words,
+                                              order_preferences,
+                                              price_point,
                                               start_time,
                                               end_time)
         # creates preferences object for user
         self.__user = user(self.__user_preferences, self.__user_account)
         # passes account and preferences object to user object - user object will inherit all
         # methods and attributes
-        self.db_obj = sqlite3.connect(
-            '/Users/benlongcroft/Documents/Nitely Project/Nitely/VENUES.db')
         # connect to database
+        self.db_obj = db_obj
         self.cursor_obj = self.db_obj.cursor()
+        print("Database connection successful")
 
     def get_account(self):
         return self.__user_account
@@ -60,57 +66,104 @@ class start_NITE:
     def get_user(self):
         return self.__user
 
-    def get_nearby_venues(self, location, radius, types):
+    @property
+    def get_number_of_venues(self):
+        return self.__number_of_venues
+
+    @staticmethod
+    def walk_happiness_model(distance, speed=2.5):
+        """Calculates walk happiness model and returns normalised score"""
+        mpm = (60 * distance) / speed
+        # this assumes speed in miles per hour but converts to miles per minute...
+        x = (21 - mpm)
+        # it also caps all travel at 21 minutes max...
+        # changing the speed will allow for longer distances i.e by uber
+
+        result = (math.pow(x, 2.9))
+        return (0.00170882 * result) / 10
+
+    def get_nearby_venues(self, eavss_obj, loc, venue_number):
         """
-        Gets nearby venues to location by tag
-        :param location: location of user
-        :param radius: total radius of distance user is willing to travel to next venue
-        :param types: types of venues to fetch
-        :return: list of Venue objects
+        Uses Google Places API to get nearby venues based on user preferences
+        :param eavss_obj: EAVSS interface module
+        :param loc: The location to search nearby (coordinates dictionary)
+        :return: a list of venue objects without vectors
         """
-        # TODO: Implement magic word functionality to filter results better
-        venues = []
-        try:
-            self.cursor_obj.execute('''SELECT id, location FROM venue_info''')
-        except sqlite3.OperationalError as e:
-            print(e)
-            print("Could not fetch - database error when looking for venues")
-        for record in self.cursor_obj.fetchall():
-            record = list(record)  # turn record from tuple to list
-            venue_id = record[0]
-            record_coordinates = str_to_coordinates(record[-1])
-            # get coordinates and split them into a dictionary
+        initial_venues = []
+        appeal = []
+        order_preference = self.__user_preferences.get_order_preference
+        price_point = self.__user_preferences.get_price_point
 
-            _distance = get_distance_between_coords(location, record_coordinates)
-            # get distance between address and venues
+        df = eavss_obj.google_api(loc, order_preference[venue_number], None, price_point)
+        # Get all nearby venues from google api based on users location
+        # user order_preference[0] as first venue type of NITE
 
-            if _distance <= radius:
-                venues.append(venue_id)
-            # quick distance check to filter out any too far out results
+        if df is None:
+            print("Session could not be completed for Places API error")
+            sys.exit(1)
 
-        valid_venue_objs = []
-        for venue_id in venues:
-            venue_id = str(venue_id)
-            self.cursor_obj.execute('''SELECT id, name, description, location, tag, restaurant, 
-                                        club, vector FROM venue_info WHERE id = ?''', (venue_id,))
-            venue_data = [*(self.cursor_obj.fetchall()[0])]
-            self.cursor_obj.execute('''SELECT day, open, close FROM by_week WHERE venue_id = ?''',
-                                    (venue_id,))
-            timing_data = [*self.cursor_obj.fetchall()]
-            open_times = {}
-            close_times = {}
-            for day in timing_data:
-                open_times[day[0]] = day[1]
-                close_times[day[0]] = day[2]
-            if venue_data[4] is None:
-                continue
-            if db_to_type(venue_data[4], venue_data[5], venue_data[6]) in types or types == []:
-                # if tag of venue is in types specified by param
-                valid_venue_objs.append(venue(venue_data[0], venue_data[1], venue_data[2],
-                                              venue_data[3], venue_data[4], venue_data[5],
-                                              venue_data[6], venue_data[7],
-                                              timings(open_times, close_times)))
-        return valid_venue_objs
+        geo = df['geometry']
+
+        for location in geo:
+            venue_location = location['location']
+            distance = get_distance_between_coords(loc, venue_location)
+            # calculate distance between users location and venue
+            appeal.append(self.walk_happiness_model(distance))
+            # apply distance appeal factor
+
+        df['distance_appeal'] = appeal
+
+        for index, row in df.iterrows():
+            location = row['geometry']
+            location = location['location']
+            initial_venues.append(venue(row['place_id'], row['name'], location, row['types'],
+                                row['distance_appeal'], None,
+                                row['price_level'], row['rating']))
+        return initial_venues
+
+        #
+        # df = df.head(15)
+        # # The below code simply adds the name, place_id and address to the venues db for eavss
+        # # and to reduce google costs if the venue is not already in there.
+        # for index, row in df.iterrows():
+        #     name = row['name']
+        #     self.cursor_obj.execute("SELECT venue_id FROM venues WHERE name = ?", (name,))
+        #     objs = self.cursor_obj.fetchall()
+        #     if len(objs) == 0:
+        #         place_id = row['place_id']
+        #         address = row['vicinity']
+        #         self.cursor_obj.execute("INSERT INTO venues(name, address, place_id) VALUES(?, ?, ?)", (name, address, place_id))
+        #         self.db_obj.commit()
+        #
+        #
+        # # only keep the top 15 results, assumes that half will be too far away
+        # # 15 is ample to choose from initially.
+        #
+        # all_reviews = {}
+        # for index, row in df.iterrows():
+        #     print(row['name'])
+        #     location = row['geometry']
+        #     location = location['location']
+        #     time_data = eavss_obj.get_timings_from_api(row['place_id'])
+        #     # get opening hours data for each venue
+        #
+        #     if time_data == 0:
+        #         print(row['name'] + " does not have opening hours listed")
+        #         print("Skipping...\n")
+        #         continue
+        #     elif row['distance_appeal'] < 0.001:
+        #         if len(initial_venues) > 6:
+        #             print('Desperate mode activated -> ignoring user preferences!')
+        #             print("Adding...\n")
+        #         else:
+        #             print(row['name'] + " is too far away by this method of transport")
+        #             print("Skipping...\n")
+        #
+        #     opening, closing = api_to_timings(time_data['periods'])
+        #     initial_venues.append(venue(row['place_id'], row['name'], location, row['types'],
+        #                         row['distance_appeal'], timings(opening, closing),
+        #                         row['price_level'], row['rating']))
+        # return initial_venues
 
     @staticmethod
     def get_similarity(venues, u_vector):
@@ -128,34 +181,25 @@ class start_NITE:
             venue_vector = venue_vector.reshape(1, 300)
             # split the string vector and convert to
             # numpy array of floats
-            cos = np.linalg.norm((u_vector-venue_vector))
+            cos = np.linalg.norm((u_vector - venue_vector))
             similarity[venue_obj] = cos
         return sort_dictionary(similarity)
 
-    def get_time_slot(self, new_venue, package_timings):
+    def get_time_slot(self, new_venue, start_time, end_time, eavss_obj):
         """
         Checks that new_venue timings are within the times specified by the user
         :param new_venue: The new venue to check as a Venue object
         :param package_timings: Dictionary of the timings of the venues (venue:timings)
         :return: False if the venue is invalid, otherwise returns timings for new_venue
         """
-        v_timings = new_venue.get_timings
-        # get venue timings
-        start_time = self.__user.get_start_time
-        end_time = self.__user.get_end_time
-        # get users start and end times
+        time_data = eavss_obj.get_timings_from_api(new_venue.get_id)
+        opening, closing = api_to_timings(time_data['periods'])
+        v_timings = timings(opening, closing)
+
         total_time = (end_time - start_time)
         # find total time the user will spend out
         alpha = (total_time / self.__number_of_venues)
         # Find average time at each venue
-        if package_timings != {}:
-            # if there are packages already, assign the
-            # leaving time of the first venue as the start time
-            for key in package_timings.keys():
-                value = package_timings[key]
-                if value > start_time:
-                    start_time = value
-            assert isinstance(start_time, object)
 
         ideal_time = (start_time + alpha)
         # ideal time is the ideal time to leave the venue
@@ -169,11 +213,10 @@ class start_NITE:
         if closing_time >= ideal_time and start_time >= opening_time:
             # if the ideal time is before the closing time and the start time is after
             # the opening time
-            package_timings[new_venue] = ideal_time
+            return [start_time, ideal_time]
         else:
             # if venue is not able to be visited due to opening/closing times, return false
             return False
-        return package_timings
 
     def find_next_venue(self, not_applicable, vector, location, venue_number):
         """
@@ -205,7 +248,7 @@ class start_NITE:
             # Increase radius by 0.2 each time. CAP at 2 miles from location
 
             new_venues = self.get_nearby_venues(location, increase_radius, types)
-            if len(new_venues) >= 20:
+            if len(new_venues) >= 15:
                 # This means there must be 20 venues nearby to choose from
                 # TODO: This value is stupid sometimes. Needs to be adjusted
                 break
@@ -279,7 +322,8 @@ class start_NITE:
                     if not output:
                         not_applicable.append(venue_to_add)
                         # if its not valid, add it to not_applicable and find a new venue
-                        venue_to_add = self.find_next_venue(not_applicable, user_vec, location, venue_number)
+                        venue_to_add = self.find_next_venue(not_applicable, user_vec, location,
+                                                            venue_number)
                     else:
                         package_venues = output
                         break

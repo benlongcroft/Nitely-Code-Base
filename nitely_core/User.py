@@ -8,12 +8,13 @@ class user(preferences, account):
         self.__keywords = user_preferences.get_keywords
         self.__location = user_preferences.get_location
         self.__location_distance = user_preferences.get_location_distance
-        self.__magic_words = user_preferences.get_magic_words
+        self.__order_preference = user_preferences.get_order_preference
+        self.__price_point = user_preferences.get_price_point
         self.__start_time = user_preferences.get_start_time
         self.__end_time = user_preferences.get_end_time
 
         preferences.__init__(self, self.__keywords, self.__location, self.__location_distance,
-                             self.__magic_words, self.__start_time, self.__end_time)
+                             self.__order_preference, self.__price_point, self.__start_time, self.__end_time)
         # inheriting preference methods
 
         self.__name = user_account.get_name

@@ -26,13 +26,17 @@ def cli():
                         help="enter distance from location address in miles",
                         type=int)
 
+    parser.add_argument("--price_point",
+                        help="Google price point",
+                        type=int)
+
     parser.add_argument("--keywords",
                         help="All user keywords",
                         nargs='+',
                         type=str)
 
-    parser.add_argument("--magic_words",
-                        help="Users magic words",
+    parser.add_argument("--order_preference",
+                        help="preference of type of venue in order",
                         nargs="+",
                         type=str)
 
@@ -58,5 +62,5 @@ def cli():
 
     args = parser.parse_args()
     args = vars(args)
-    print(args)
+    print("Got all user preferences\n")
     return args

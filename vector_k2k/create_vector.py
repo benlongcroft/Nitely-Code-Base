@@ -6,19 +6,20 @@ import pickle
 import spacy
 import numpy as np
 from sklearn import preprocessing
+from string import punctuation
 
-# nlp = spacy.load('en_core_web_md', disable=['parser', 'tagger', 'ner'])
-nlp = spacy.load('en_core_web_md')
-lexemes = []  # get lexemes from pickled file and load into lexemes
+print('Loading Spacy Library')
+NLP = spacy.load('en_core_web_md')
 pickle_off = open("./vector_k2k/lexemes.pkl", "rb")
 temp = pickle.load(pickle_off)
-print(temp)
-for v in temp:
-    lexemes.append(nlp.vocab[v])
+print("Loading " + str(len(temp)) + " English vocabulary words")
+STOP_WORDS = NLP.Defaults.stop_words
+STOP_WORDS = STOP_WORDS.union(set(punctuation))
+VOCAB = [NLP.vocab[g] for g in temp if g not in STOP_WORDS]
 pickle_off.close()
+print("Found "+str(len(VOCAB))+" valid vocabulary words")
+print("Completed synthesising the English language")
 
-
-# TODO: Work out the ideal .prob value to use and streamline this function
 
 def get_related_words(word):
     """
@@ -27,71 +28,23 @@ def get_related_words(word):
     :param word: origin word. String format
     :return: list of 3 most similar words with their similarity via spacy to origin word
     """
-    word = nlp.vocab[word]  # get nlp vocab object for word
-    _queries = []
-    for _vocab_obj in lexemes:
-        if _vocab_obj.is_lower == word.is_lower:
-            _queries.append(_vocab_obj)
-    by_similarity = [[x.text, x.similarity(word)] for x in _queries]  # find similarity
+    word = NLP.vocab[word]  # get NLP vocab object for word
+    queries = []
+    for vocab_obj in VOCAB:
+        if vocab_obj.is_lower and vocab_obj.has_vector and vocab_obj.lower_ != word.lower_:
+            queries.append(vocab_obj)
+    if len(queries) == 0:
+        print("WARNING: Could not find any words which match!")
+    by_similarity = [[x.text, x.similarity(word)] for x in queries]  # TODO: Find faster similarity metric
     by_similarity = sorted(by_similarity, key=lambda x: x[1], reverse=True)  # sort similarity
-    if by_similarity[0][0] == word:  # if first word in by_similarity is the origin word, delete it
-        del by_similarity[0]
-    return by_similarity[:3]  # return three most similar words
-
-# def get_related_words(word):
-#     topn = 3
-#     print(word)
-#     word_str = str(word.lower())
-#     lexemes = [nlp.vocab[orth] for orth in nlp.vocab.vectors]
-#     word = nlp.vocab[word_str]
-#     print(lexemes)
-#     queries = [
-#         w for w in lexemes
-#         if w.is_lower == word.is_lower and np.count_nonzero(w.vector)
-#     ]
-#
-#     by_similarity = sorted(queries, key=lambda w: word.similarity(w), reverse=True)
-#     print(by_similarity)
-#     top_words = [[w.lower_, w.similarity(word)] for w in by_similarity[:topn + 1] if
-#             w.lower_ != word.lower_]
-#     return top_words
-
-
-# def LemmatiseProfile(Profile):
-#     lemmatised_profile = nlp(Profile)
-#     profile_lemmas = []
-#     for word in lemmatised_profile:
-#         if not word.is_punct | word.is_stop:
-#             if word.pos_ == 'ADJ':
-#                 profile_lemmas.append(word.lemma_)
-#     if len(profile_lemmas) != 0:
-#         return profile_lemmas
-#     else:
-#         return 'Error, profile has no values in it or no ability to create lemmas of words'
-"""
-The above function is not neccessary currently as all the descriptions are  
-lemmatised in the db according to this function 
-"""
-# TODO: do some more research on finding the most important words in a description
-# def GetKeywords(profile, TfidfScores):
-#     keywords = []
-#     profile = profile.split(' ')
-#     for token in profile:
-#         try:
-#             if token == '\n' or token == '':
-#                 continue
-#             else:
-#                 keywords.append([token, TfidfScores[token]])
-#         except KeyError:
-#             print('Word not in Dictionary')
-#     keywords = sorted(keywords, key=lambda x: x[1])
-#     for x in range(len(keywords)):
-#         keywords[x][1] = 1
-#     return keywords[:10]
-"""
-Also not neccessary currently and outdated as TFIDF is not the best method for 
-analysing word importance just word frequency 
-"""
+    by_similarity = by_similarity[:15]
+    result = {}
+    i = 0
+    while len(result) != 3:
+        if by_similarity[i][0] not in result.keys():
+            result[by_similarity[i][0]] = by_similarity[i][1]
+        i += 1
+    return result  # return three most similar words
 
 
 def convert_word_to_vector(word):
@@ -101,8 +54,8 @@ def convert_word_to_vector(word):
     :param word: string word
     :return: numpy matrix of size (1, 300) normalised
     """
-    return nlp.vocab[word].vector.reshape(1, 300)
-    # normalise nlp word vector to shape 300
+    return NLP.vocab[word].vector.reshape(1, 300)
+    # normalise NLP word vector to shape 300
 
 
 def check_transposition_table(word, tbl):
@@ -160,11 +113,14 @@ def tree_creation(tree, words_to_add, scores_to_add,
     transposition_file_obj = open(transposition_file_path, 'rb')
     try:
         tbl = pickle.load(transposition_file_obj)
+        print('Loaded transposition table')
     except EOFError:
         tbl = []
+        print("Transposition table is empty!")
     transposition_file_obj.close()
     words_for_transpos = []
     # opens transpos file and gets table, also define list to add new words too
+    print("Beginning tree construction")
     for x, __ in enumerate(words_to_add):
         trans_pos_result = check_transposition_table(words_to_add[x], tbl)
         # get usable words from transpos table if existsn
@@ -176,11 +132,13 @@ def tree_creation(tree, words_to_add, scores_to_add,
         else:  # if not in transpos table, then do the old fashioned way ;]
             related_words = get_related_words(words_to_add[x])  # get related words
             usable_words = []  # create list for those that are not duplicates
-            for y in related_words:
-                if not y[0] in all_words_in_tree:
-                    if y[1] >= 1:  # if the score is above 1, make it 0.99 for simplicity sake
-                        y[1] = 0.99
-                    usable_words.append(list(y))  # add word and score to usable if not a duplicate
+            for word in related_words.keys():
+                score = related_words[word]
+                if word not in all_words_in_tree:
+                    if score >= 1:  # if the score is above 1, make it 0.99 for simplicity sake
+                        score = 0.99
+                    usable_words.append(
+                        list([word, score]))  # add word and score to usable if not a duplicate
             word_parent_score = scores_to_add[x]
             for i, __ in enumerate(usable_words):
                 usable_words[i][1] = usable_words[i][1] * word_parent_score
@@ -202,6 +160,7 @@ def tree_creation(tree, words_to_add, scores_to_add,
     if level == level_max:  # refers to number of middle layers, if a complete...
         for y in next_gen_words:  # add the final words as final leaves
             tree[y] = [next_gen_scores[next_gen_words.index(y)]]
+        print("K2K Lexemes tree constructed successfully")
         return tree  # finish
 
     else:
@@ -221,6 +180,7 @@ def turn_to_vector(tree):
     :param tree: Users tree as defined above
     :return: numpy matrix of (1,300) which is the users vector
     """
+    print("Starting vectoring process")
     total_vector = np.array([0 for x in range(300)])  # create blank vector
     for x in list(tree.keys()):  # go through every node
         parent = tree[x]  # get parents value
@@ -236,4 +196,5 @@ def turn_to_vector(tree):
             # if it is the final child then ignore as has
             # already been weighted when processing its parent
             pass
+    print("Vectoring process completed")
     return preprocessing.normalize(total_vector.reshape(1, 300))

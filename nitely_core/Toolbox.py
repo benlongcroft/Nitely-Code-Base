@@ -83,6 +83,18 @@ def convert_to_datetime(start_time, end_time, date):
         print(e)
 
 
+def api_to_timings(periods):
+    days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+    opening = {}
+    closing = {}
+    for i, day in enumerate(periods):
+        close = day['close']
+        open = day['open']
+        opening[days[i]] = open['time']
+        closing[days[i]] = close['time']
+    return opening, closing
+
+
 def date_str_to_weekday(date):
     """
     Converts date to weekday as MON, TUE, WED ...
