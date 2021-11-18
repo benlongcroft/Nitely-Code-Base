@@ -3,7 +3,6 @@ import sys
 from Account import account
 from Preferences import preferences
 from User import user
-import sqlite3
 from Venue import venue
 from Timings import timings
 from Package import package
@@ -17,7 +16,7 @@ class start_NITE:
     start_NITE creates a new session from the arguments given on command line
     """
 
-    def __init__(self, kwargs):
+    def __init__(self, kwargs, db_obj):
         """
         Constructor converts kwargs to valid formats and connects to database
         :param kwargs: command line arguments
@@ -53,10 +52,8 @@ class start_NITE:
         self.__user = user(self.__user_preferences, self.__user_account)
         # passes account and preferences object to user object - user object will inherit all
         # methods and attributes
-        print("User validated successfully...\nAttempting to connect to database")
-        self.db_obj = sqlite3.connect(
-            '/Users/benlongcroft/Documents/Nitely Project/Nitely/FINAL_DB')
         # connect to database
+        self.db_obj = db_obj
         self.cursor_obj = self.db_obj.cursor()
         print("Database connection successful")
 
@@ -68,6 +65,10 @@ class start_NITE:
 
     def get_user(self):
         return self.__user
+
+    @property
+    def get_number_of_venues(self):
+        return self.__number_of_venues
 
     @staticmethod
     def walk_happiness_model(distance, speed=2.5):
@@ -81,19 +82,19 @@ class start_NITE:
         result = (math.pow(x, 2.9))
         return (0.00170882 * result) / 10
 
-    def get_nearby_venues(self, eavss_obj, loc):
+    def get_nearby_venues(self, eavss_obj, loc, venue_number):
         """
         Uses Google Places API to get nearby venues based on user preferences
         :param eavss_obj: EAVSS interface module
         :param loc: The location to search nearby (coordinates dictionary)
         :return: a list of venue objects without vectors
         """
-        venues = []
+        initial_venues = []
         appeal = []
         order_preference = self.__user_preferences.get_order_preference
         price_point = self.__user_preferences.get_price_point
 
-        df = eavss_obj.google_api(loc, order_preference[0], None, price_point)
+        df = eavss_obj.google_api(loc, order_preference[venue_number], None, price_point)
         # Get all nearby venues from google api based on users location
         # user order_preference[0] as first venue type of NITE
 
@@ -101,22 +102,6 @@ class start_NITE:
             print("Session could not be completed for Places API error")
             sys.exit(1)
 
-        df = df.head(15)
-        # The below code simply adds the name, place_id and address to the venues db for eavss
-        # and to reduce google costs if the venue is not already in there.
-        for index, row in df.iterrows():
-            name = row['name']
-            self.cursor_obj.execute("SELECT venue_id FROM venues WHERE name = ?", (name,))
-            objs = self.cursor_obj.fetchall()
-            if len(objs) == 0:
-                place_id = row['place_id']
-                address = row['vicinity']
-                self.cursor_obj.execute("INSERT INTO venues(name, address, place_id) VALUES(?, ?, ?)", (name, address, place_id))
-                self.db_obj.commit()
-
-
-        # only keep the top 15 results, assumes that half will be too far away
-        # 15 is ample to choose from initially.
         geo = df['geometry']
 
         for location in geo:
@@ -131,26 +116,54 @@ class start_NITE:
         for index, row in df.iterrows():
             location = row['geometry']
             location = location['location']
-            time_data = eavss_obj.get_timings_from_api(row['place_id'])
-            # get opening hours data for each venue
-
-            if time_data == 0:
-                print(row['name'] + " does not have opening hours listed")
-                print("Skipping...\n")
-                continue
-            elif row['distance_appeal'] < 0.001:
-                if len(venues) > 6:
-                    print('Desperate mode activated -> ignoring user preferences!')
-                    print("Adding...\n")
-                else:
-                    print(row['name'] + " is too far away by this method of transport")
-                    print("Skipping...\n")
-
-            opening, closing = api_to_timings(time_data['periods'])
-            venues.append(venue(row['place_id'], row['name'], location, row['types'],
-                                row['distance_appeal'], timings(opening, closing),
+            initial_venues.append(venue(row['place_id'], row['name'], location, row['types'],
+                                row['distance_appeal'], None,
                                 row['price_level'], row['rating']))
-        return venues
+        return initial_venues
+
+        #
+        # df = df.head(15)
+        # # The below code simply adds the name, place_id and address to the venues db for eavss
+        # # and to reduce google costs if the venue is not already in there.
+        # for index, row in df.iterrows():
+        #     name = row['name']
+        #     self.cursor_obj.execute("SELECT venue_id FROM venues WHERE name = ?", (name,))
+        #     objs = self.cursor_obj.fetchall()
+        #     if len(objs) == 0:
+        #         place_id = row['place_id']
+        #         address = row['vicinity']
+        #         self.cursor_obj.execute("INSERT INTO venues(name, address, place_id) VALUES(?, ?, ?)", (name, address, place_id))
+        #         self.db_obj.commit()
+        #
+        #
+        # # only keep the top 15 results, assumes that half will be too far away
+        # # 15 is ample to choose from initially.
+        #
+        # all_reviews = {}
+        # for index, row in df.iterrows():
+        #     print(row['name'])
+        #     location = row['geometry']
+        #     location = location['location']
+        #     time_data = eavss_obj.get_timings_from_api(row['place_id'])
+        #     # get opening hours data for each venue
+        #
+        #     if time_data == 0:
+        #         print(row['name'] + " does not have opening hours listed")
+        #         print("Skipping...\n")
+        #         continue
+        #     elif row['distance_appeal'] < 0.001:
+        #         if len(initial_venues) > 6:
+        #             print('Desperate mode activated -> ignoring user preferences!')
+        #             print("Adding...\n")
+        #         else:
+        #             print(row['name'] + " is too far away by this method of transport")
+        #             print("Skipping...\n")
+        #
+        #     opening, closing = api_to_timings(time_data['periods'])
+        #     initial_venues.append(venue(row['place_id'], row['name'], location, row['types'],
+        #                         row['distance_appeal'], timings(opening, closing),
+        #                         row['price_level'], row['rating']))
+        # return initial_venues
 
     @staticmethod
     def get_similarity(venues, u_vector):
@@ -172,30 +185,21 @@ class start_NITE:
             similarity[venue_obj] = cos
         return sort_dictionary(similarity)
 
-    def get_time_slot(self, new_venue, package_timings):
+    def get_time_slot(self, new_venue, start_time, end_time, eavss_obj):
         """
         Checks that new_venue timings are within the times specified by the user
         :param new_venue: The new venue to check as a Venue object
         :param package_timings: Dictionary of the timings of the venues (venue:timings)
         :return: False if the venue is invalid, otherwise returns timings for new_venue
         """
-        v_timings = new_venue.get_timings
-        # get venue timings
-        start_time = self.__user.get_start_time
-        end_time = self.__user.get_end_time
-        # get users start and end times
+        time_data = eavss_obj.get_timings_from_api(new_venue.get_id)
+        opening, closing = api_to_timings(time_data['periods'])
+        v_timings = timings(opening, closing)
+
         total_time = (end_time - start_time)
         # find total time the user will spend out
         alpha = (total_time / self.__number_of_venues)
         # Find average time at each venue
-        if package_timings != {}:
-            # if there are packages already, assign the
-            # leaving time of the first venue as the start time
-            for key in package_timings.keys():
-                value = package_timings[key]
-                if value > start_time:
-                    start_time = value
-            assert isinstance(start_time, object)
 
         ideal_time = (start_time + alpha)
         # ideal time is the ideal time to leave the venue
@@ -209,11 +213,10 @@ class start_NITE:
         if closing_time >= ideal_time and start_time >= opening_time:
             # if the ideal time is before the closing time and the start time is after
             # the opening time
-            package_timings[new_venue] = ideal_time
+            return [start_time, ideal_time]
         else:
             # if venue is not able to be visited due to opening/closing times, return false
             return False
-        return package_timings
 
     def find_next_venue(self, not_applicable, vector, location, venue_number):
         """
@@ -245,7 +248,7 @@ class start_NITE:
             # Increase radius by 0.2 each time. CAP at 2 miles from location
 
             new_venues = self.get_nearby_venues(location, increase_radius, types)
-            if len(new_venues) >= 20:
+            if len(new_venues) >= 15:
                 # This means there must be 20 venues nearby to choose from
                 # TODO: This value is stupid sometimes. Needs to be adjusted
                 break

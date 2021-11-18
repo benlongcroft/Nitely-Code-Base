@@ -56,7 +56,7 @@ class K2K:
         return turn_to_vector(tree_creation({},
                                             keywords,
                                             weightings,
-                                            0, 1, [],
+                                            0, 0, [],
                                             './vector_k2k/transpositiontbl.pkl'))
 
     def get_closest_vectors(self, valid_venues_df, user_vector):

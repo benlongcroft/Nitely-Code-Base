@@ -1,15 +1,20 @@
 import requests
 import pandas as pd
+import os
 import Query
+import pickle
 from google.cloud import error_reporting
 
 class connect:
     """
     EAVSS connection class. Provides access to EAVSS and Google Places API
     """
-    def __init__(self):
-        self.__key = 'AIzaSyARK-xnPLJLPKgzz1Vsu9T-AYh2QI5wvZg'
+    def __init__(self, db):
+        self.__key = 'YOURKEYHERE'
         self.location = None
+        self.db_obj = db
+        self.cursor = self.db_obj.cursor()
+        self.filestore_path = "PATH_TO_FILESTORE"
 
     @staticmethod
     def __report_manual_error(error_message):
@@ -60,6 +65,30 @@ class connect:
         df = pd.DataFrame(data['results'])
         return df
 
+    def get_EAVSS_vectors(self, venues):
+        venue_ids = {}
+        for venue in venues:
+            maps_place_id = venue.get_id
+            self.cursor.execute("""SELECT venue_id FROM main.venues WHERE place_id = ?""", (maps_place_id,))
+            r = self.cursor.fetchall()
+            if len(r) == 0:
+                print("VENUE NOT IN DB")
+            else:
+                venue_ids[r[0]] = venue
+
+        updated_venues = []
+        vectors = os.listdir()
+        for pk in venue_ids.keys():
+            venue = venue_ids[pk]
+            if pk in vectors:
+                infile = open(self.filestore_path+"/VEC/"+pk, "rb")
+                updated_venues.append(
+                    venue.set_vector(
+                        pickle.load(infile)))
+                infile.close()
+
+        return updated_venues
+
     def get_timings_from_api(self, venue_id):
         """
         Gets timings data from Google Places Details API
@@ -70,15 +99,17 @@ class connect:
         query = base + "place_id="+venue_id + "&key="+self.__key
         data = self.__make_request(query)
         data = data['result']
-        if 'opening_hours' in data.keys():
-            return data['opening_hours']
-        else:
-            return 0
+        try:
+            opening_hours = data['opening_hours']
+        except KeyError:
+            opening_hours = 0
+        return opening_hours
 
 
 
 
-# q = connect({'lng': '54.980221', 'lat': '-1.629690'})
+# q = connect()
+# q.location = {'lng': '54.980221', 'lat': '-1.629690'}
 # df = q.get_timings_from_api("ChIJyRZpVbRwfkgROeXBzOeaUoI")
 # pd.set_option('display.max_columns', None)
 # print(df)

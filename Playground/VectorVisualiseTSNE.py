@@ -86,8 +86,8 @@ main()
     # vectors.append(user_vec.reshape(300))
     # names.append('USERS VECTOR')
     #
-    # nlp = spacy.load('en_core_web_md')
-    # word = nlp.vocab['dj']
+    # NLP = spacy.load('en_core_web_md')
+    # word = NLP.vocab['dj']
     # col_tag.append('WORD')
     # names.append('DJ WORD')
     # map.append('red')

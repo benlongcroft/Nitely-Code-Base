@@ -25,6 +25,7 @@ class venue:
         self.__timings = timings
         self.__price_level = price_level
         self.__user_rating = user_rating
+        self.__vector = None
 
     @property
     def get_name(self):
@@ -50,6 +51,9 @@ class venue:
     def get_timings(self):
         return self.__timings
 
+    def set_timings(self, new_timings):
+        self.__timings = new_timings
+
     @property
     def get_distance_appeal(self):
         return self.__distance_appeal
@@ -57,6 +61,13 @@ class venue:
     @property
     def get_id(self):
         return self.__id
+
+    @property
+    def get_vector(self):
+        return self.__vector
+
+    def set_vector(self, vector):
+        self.__vector = vector
 
     def __repr__(self):
         """
